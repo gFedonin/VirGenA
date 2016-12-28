@@ -1,0 +1,4 @@
+Manifest-Version: 1.0
+Class-Path: trove-3.0.3.jar jdom-2.0.5.jar picard.jar
+Main-Class: MassRefBasedAssembler
+
