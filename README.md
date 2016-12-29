@@ -23,6 +23,8 @@ The following are required to run ViRGA:
 
 -[USEARCH](http://www.drive5.com/usearch/) binary in any location. Path to the binary is set in configuration file. Recomended version is included in the distribution.
 
+-[Blast](https://blast.ncbi.nlm.nih.gov/Blast.cgi?PAGE_TYPE=BlastDocs&DOC_TYPE=Download) installed locally
+
 -Some external libraries:
 
   1. [JDOM](http://www.jdom.org/): Java-based solution for accessing, manipulating, and outputting XML data from Java code.
