@@ -2,11 +2,9 @@
  * Created with IntelliJ IDEA.
  * Date: 22.07.15
  */
-class RefSubseq implements Comparable{
+class RefSubseq extends Interval implements Comparable{
 
   int refID;
-  int start;
-  int end;
 
   @Override
   public int compareTo(Object o){

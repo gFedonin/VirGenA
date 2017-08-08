@@ -12,6 +12,7 @@ class MappedRead implements Comparable{
   byte reverse;
   byte[] q;
   byte n;
+  int fragmentID;
 
   MappedRead(){
 
@@ -33,6 +34,19 @@ class MappedRead implements Comparable{
   public boolean equals(Object o){
     MappedRead read = (MappedRead) o;
     return read.start == start && read.end == end;
+  }
+
+  public void chooseFragment(int[] fragmentEnds){
+    int s = 0;
+    int e = 0;
+    for(int i = 0; i < fragmentEnds.length; i++){
+      e = fragmentEnds[i];
+      if(start >= s && end <= e){
+        fragmentID = i;
+        break;
+      }
+      s = e;
+    }
   }
 
 }

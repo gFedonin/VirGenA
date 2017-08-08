@@ -15,7 +15,6 @@ import java.util.concurrent.TimeUnit;
 class ProblemReadMapperPairedReadTermination extends ProblemReadMapper {
 
   private LinkedList<ProblemRead>[] workingLists;
-  private int threadNum;
   private float identityThreshold;
   private int coverageThreshold;
   private float gapMergeThreshold;
@@ -135,7 +134,7 @@ class ProblemReadMapperPairedReadTermination extends ProblemReadMapper {
       while (iter.hasNext()) {
         ProblemRead read = iter.next();
         short gapID = read.gapID;
-        Interval gap = problemIntervals[gapID];
+        ProblemInterval gap = problemIntervals[gapID];
         if(gap.merge || gap.seqFinal != null) {//gap.seqFinal != null
           iter.remove();
           continue;
@@ -309,7 +308,7 @@ class ProblemReadMapperPairedReadTermination extends ProblemReadMapper {
       while (iter.hasNext()) {
         ProblemRead read = iter.next();
         short gapID = read.gapID;
-        Interval gap = problemIntervals[gapID];
+        ProblemInterval gap = problemIntervals[gapID];
         if (gap.merge || gap.seqFinal != null) {//gap.seqFinal != null
           iter.remove();
           continue;
@@ -451,9 +450,8 @@ class ProblemReadMapperPairedReadTermination extends ProblemReadMapper {
 
   @Override
   void init(ArrayList<ProblemRead> problemReads, KMerCounter counter, Aligner aligner,
-                      Interval[] problemIntervals) {
+                      ProblemInterval[] problemIntervals) {
     super.init(problemReads, counter, aligner, problemIntervals);
-    threadNum = Runtime.getRuntime().availableProcessors();
     workingLists = new LinkedList[threadNum];
     for (int i = 0; i < threadNum; i++) {
       workingLists[i] = new LinkedList<>();
@@ -596,7 +594,7 @@ class ProblemReadMapperPairedReadTermination extends ProblemReadMapper {
       for (int n = 0; n < threadNum; n++) {
         LeftEdgeFreqCounting task = tasks[n];
         for (int i = 0; i < problemIntervals.length; i++) {
-          Interval gap = problemIntervals[i];
+          ProblemInterval gap = problemIntervals[i];
           if (!gap.updateCount) {
             continue;
           }
@@ -661,7 +659,7 @@ class ProblemReadMapperPairedReadTermination extends ProblemReadMapper {
       for (int n = 0; n < threadNum; n++) {
         RightEdgeFreqCounting task = tasks[n];
         for (int i = 0; i < problemIntervals.length; i++) {
-          Interval gap = problemIntervals[i];
+          ProblemInterval gap = problemIntervals[i];
           if (!gap.updateCount) {
             continue;
           }
@@ -788,7 +786,7 @@ class ProblemReadMapperPairedReadTermination extends ProblemReadMapper {
     @Override
     public void run(){
       unmapped = new ArrayList<>();
-      Interval gap = problemIntervals[gapID];
+      ProblemInterval gap = problemIntervals[gapID];
       HashMap<String, int[]> index = indexConcat(new String(gap.left) + insert + new String(gap.right));
       int sizeConcat = gap.concat.length + insert.length();
       for(ProblemRead read: workingLists[k]){
@@ -844,7 +842,7 @@ class ProblemReadMapperPairedReadTermination extends ProblemReadMapper {
     executor.awaitTermination(100, TimeUnit.HOURS);
     int totalActive = 0;
     int oneUnmapped = 0;
-    Interval gap = problemIntervals[gapID];
+    ProblemInterval gap = problemIntervals[gapID];
     try{
       for(PairCounter task : tasks){
         totalActive += task.totalActive;
@@ -864,7 +862,7 @@ class ProblemReadMapperPairedReadTermination extends ProblemReadMapper {
     try{
       TObjectIntHashMap<String>[] inserts = countInsertsTwoSide();
       for(int i = 0; i < problemIntervals.length; i++){
-        Interval gap = problemIntervals[i];
+        ProblemInterval gap = problemIntervals[i];
         gap.updateCount = false;
         if(gap.seqFinal == null){
           TObjectIntHashMap inserts_i = inserts[i];

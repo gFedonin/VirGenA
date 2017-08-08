@@ -29,12 +29,7 @@ public class Mapper extends Constants{
   }
 
   private MappedRead[] mapReadFast(byte[] read, Reference genome){
-    MappedRead[] bestPositions;
-    if(genome.isFragmented){
-      bestPositions = counter.getNBestRegions(read, genome.index, genome.contigEnds);
-    }else{
-      bestPositions = counter.getNBestRegions(read, genome.index, 0, genome.length);
-    }
+    MappedRead[] bestPositions = counter.getNBestRegions(read, genome.index, genome.contigEnds);
     if(bestPositions == null){
       return new MappedRead[0];
     }
@@ -100,56 +95,9 @@ public class Mapper extends Constants{
       }
       for(int j = 0; j < forward1.length; j++){
         MappedRead read1 = forward1[j];
-        int fragmentID1 = 0;
         if(genome.isFragmented){
-          int start = 0;
-          int end = 0;
-          for(int i = 0; i < genome.fragmentEnds.length; i++){
-            end = genome.fragmentEnds[i];
-            if(read1.start >= start && read1.end <= end){
-              fragmentID1 = i;
-              break;
-            }
-            start = end;
-          }
-        }
-        for(int k = 0; k < reverse2.length; k++){
-          MappedRead read2 = reverse2[k];
-          int fragmentID2 = 0;
-          if(genome.isFragmented){
-            int start = 0;
-            int end = 0;
-            for(int i = 0; i < genome.fragmentEnds.length; i++){
-              end = genome.fragmentEnds[i];
-              if(read2.start >= start && read2.end <= end){
-                fragmentID2 = i;
-                break;
-              }
-              start = end;
-            }
-          }
-          if(read1.start < read2.end && read2.end - read1.start <= insertLen){
-            if(fragmentID1 == fragmentID2 && read1.count + read2.count > maxCount){
-              maxCount = read1.count + read2.count;
-              max1 = j;
-              max2 = k;
-              side = 0;
-            }
-          }
-          if(genome.isFragmented){
-            if(read2.count > countFrag2[fragmentID2]){
-              countFrag2[fragmentID2] = read2.count;
-              sideFrag2[fragmentID2] = 1;
-              maxIndFrag2[fragmentID2] = k;
-            }
-          }
-          if(read2.count > count2){
-            count2 = read2.count;
-            side2 = 1;
-            maxInd2 = k;
-          }
-        }
-        if(genome.isFragmented){
+          read1.chooseFragment(genome.fragmentEnds);
+          int fragmentID1 = read1.fragmentID;
           if(read1.count > countFrag1[fragmentID1]){
             countFrag1[fragmentID1] = read1.count;
             sideFrag1[fragmentID1] = 0;
@@ -164,56 +112,9 @@ public class Mapper extends Constants{
       }
       for(int j = 0; j < reverse1.length; j++){
         MappedRead read1 = reverse1[j];
-        int fragmentID1 = 0;
         if(genome.isFragmented){
-          int start = 0;
-          int end = 0;
-          for(int i = 0; i < genome.fragmentEnds.length; i++){
-            end = genome.fragmentEnds[i];
-            if(read1.start >= start && read1.end <= end){
-              fragmentID1 = i;
-              break;
-            }
-            start = end;
-          }
-        }
-        for(int k = 0; k < forward2.length; k++){
-          MappedRead read2 = forward2[k];
-          int fragmentID2 = 0;
-          if(genome.isFragmented){
-            int start = 0;
-            int end = 0;
-            for(int i = 0; i < genome.fragmentEnds.length; i++){
-              end = genome.fragmentEnds[i];
-              if(read2.start >= start && read2.end <= end){
-                fragmentID2 = i;
-                break;
-              }
-              start = end;
-            }
-          }
-          if(read2.start < read1.end && read1.end - read2.start <= insertLen){
-            if(fragmentID1 == fragmentID2 && read1.count + read2.count > maxCount){
-              maxCount = read1.count + read2.count;
-              max1 = j;
-              max2 = k;
-              side = 1;
-            }
-          }
-          if(genome.isFragmented){
-            if(read2.count > countFrag2[fragmentID2]){
-              countFrag2[fragmentID2] = read2.count;
-              sideFrag2[fragmentID2] = 0;
-              maxIndFrag2[fragmentID2] = k;
-            }
-          }
-          if(read2.count > count2){
-            count2 = read2.count;
-            side2 = 0;
-            maxInd2 = k;
-          }
-        }
-        if(genome.isFragmented){
+          read1.chooseFragment(genome.fragmentEnds);
+          int fragmentID1 = read1.fragmentID;
           if(read1.count > countFrag1[fragmentID1]){
             countFrag1[fragmentID1] = read1.count;
             sideFrag1[fragmentID1] = 1;
@@ -224,6 +125,73 @@ public class Mapper extends Constants{
           count1 = read1.count;
           side1 = 1;
           maxInd1 = j;
+        }
+      }
+      for(int k = 0; k < reverse2.length; k++){
+        MappedRead read2 = reverse2[k];
+        if(genome.isFragmented){
+          read2.chooseFragment(genome.fragmentEnds);
+          int fragmentID2 = read2.fragmentID;
+          if(read2.count > countFrag2[fragmentID2]){
+            countFrag2[fragmentID2] = read2.count;
+            sideFrag2[fragmentID2] = 1;
+            maxIndFrag2[fragmentID2] = k;
+          }
+        }
+        if(read2.count > count2){
+          count2 = read2.count;
+          side2 = 1;
+          maxInd2 = k;
+        }
+      }
+      for(int k = 0; k < forward2.length; k++){
+        MappedRead read2 = forward2[k];
+        if(genome.isFragmented){
+          read2.chooseFragment(genome.fragmentEnds);
+          int fragmentID2 = read2.fragmentID;
+          if(read2.count > countFrag2[fragmentID2]){
+            countFrag2[fragmentID2] = read2.count;
+            sideFrag2[fragmentID2] = 0;
+            maxIndFrag2[fragmentID2] = k;
+          }
+        }
+        if(read2.count > count2){
+          count2 = read2.count;
+          side2 = 0;
+          maxInd2 = k;
+        }
+      }
+
+      for(int j = 0; j < forward1.length; j++){
+        MappedRead read1 = forward1[j];
+        int fragmentID1 = read1.fragmentID;
+        for(int k = 0; k < reverse2.length; k++){
+          MappedRead read2 = reverse2[k];
+          int fragmentID2 = read2.fragmentID;
+          if(read1.start < read2.end && read2.end - read1.start <= insertLen){
+            if(fragmentID1 == fragmentID2 && read1.count + read2.count > maxCount){
+              maxCount = read1.count + read2.count;
+              max1 = j;
+              max2 = k;
+              side = 0;
+            }
+          }
+        }
+      }
+      for(int j = 0; j < reverse1.length; j++){
+        MappedRead read1 = reverse1[j];
+        int fragmentID1 = read1.fragmentID;
+        for(int k = 0; k < forward2.length; k++){
+          MappedRead read2 = forward2[k];
+          int fragmentID2 = read2.fragmentID;
+          if(read2.start < read1.end && read1.end - read2.start <= insertLen){
+            if(fragmentID1 == fragmentID2 && read1.count + read2.count > maxCount){
+              maxCount = read1.count + read2.count;
+              max1 = j;
+              max2 = k;
+              side = 1;
+            }
+          }
         }
       }
       switch(side){
@@ -423,6 +391,11 @@ public class Mapper extends Constants{
 
   MappedData mapReads(ArrayList<PairedRead> reads, Reference genome) throws InterruptedException{
     MappedData res = new MappedData();
+    if(genome.length == 0){
+      res.unmapped = reads;
+      logger.println("Mapping is impossible: reference is an empty string!");
+      return res;
+    }
     int totalPairs = reads.size();
     int totalMapped = 0;
     int mappedForward = 0;
@@ -535,17 +508,19 @@ public class Mapper extends Constants{
   }
 
   private static void printUsage(){
-    System.out.println("Usage: java -cp ./ViRGA.jar Mapper pathToConfigFile");
+    System.out.println("Usage: java -cp ./VirGenA.jar Mapper pathToConfigFile");
   }
 
   public static void main(String[] args){
     try{
-      if(args[0].equals("-h") || args.length == 0){
+      if(args.length == 0 || args[0].equals("-h")){
         printUsage();
+        return;
       }
       if(args.length != 1){
         System.out.println("Wrong parameter number!");
         printUsage();
+        return;
       }
       SAXBuilder jdomBuilder = new SAXBuilder();
       Document jdomDocument = jdomBuilder.build(args[0]);

@@ -2,10 +2,8 @@
  * Created with IntelliJ IDEA.
  * Date: 07.08.15
  */
-class Location{
+class Location extends Interval{
 
-  int start;
-  int end;
   int startIndex;
   int endIndex;
   int count;

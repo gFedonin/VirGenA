@@ -11,21 +11,22 @@ abstract class ProblemReadMapper extends Constants{
 
   KMerCounter counter;
   Aligner aligner;
-  Interval[] problemIntervals;
+  ProblemInterval[] problemIntervals;
   Logger logger;
   boolean debug;
   HashSet<String>[] leftReads;
   HashSet<String>[] rightReads;
-
+  int threadNum;
 
   ProblemReadMapper(Document document){
     logger = Logger.getInstance(document);
     Element element = document.getRootElement().getChild("ConsensusBuilder").getChild("Reassembler");
     debug = Boolean.parseBoolean(element.getChildText("Debug"));
+    threadNum = Integer.parseInt(document.getRootElement().getChildText("ThreadNumber"));
   }
 
   void init(ArrayList<ProblemRead> problemReads, KMerCounter counter, Aligner aligner,
-                      Interval[] problemIntervals){
+                      ProblemInterval[] problemIntervals){
     this.counter = counter;
     this.aligner = aligner;
     this.problemIntervals = problemIntervals;

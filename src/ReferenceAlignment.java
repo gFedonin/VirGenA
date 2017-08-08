@@ -20,6 +20,7 @@ class ReferenceAlignment extends Constants{
   HashMap<String, Reference> refSeqs;
   int length;
   int refNum;
+  int threadNum;
 
   private static ReferenceAlignment instance;
 
@@ -27,6 +28,7 @@ class ReferenceAlignment extends Constants{
     Element element = document.getRootElement().getChild("ReferenceSelector");
     String refAlnPath = element.getChildText("ReferenceMSA");
     String randomModelPath = element.getChild("MapperToMSA").getChildText("RandomModelPath");
+    threadNum = Integer.parseInt(document.getRootElement().getChildText("ThreadNumber"));
     try {
       DataInputStream inputStream = new DataInputStream(new FileInputStream(randomModelPath));
       int k = inputStream.readInt();
@@ -67,7 +69,7 @@ class ReferenceAlignment extends Constants{
       refSeqs = new HashMap<>();
       BufferedReader reader = new BufferedReader(new FileReader(refAlnPath));
       String line;
-      String name = reader.readLine().substring(1);
+      String name = reader.readLine().substring(1).replace(' ', '_');
       StringBuilder builder = new StringBuilder();
       int refID = 0;
       while((line = reader.readLine()) != null){
@@ -78,7 +80,7 @@ class ReferenceAlignment extends Constants{
           refAlns.add(seq);
           refSeqs.put(name, seq);
           builder = new StringBuilder();
-          name = line.substring(1);
+          name = line.substring(1).replace(' ', '_');
         }else{
           builder.append(line);
         }
@@ -129,7 +131,6 @@ class ReferenceAlignment extends Constants{
   }
 
   private void buildAlnIndex(int K) throws InterruptedException{
-    int threadNum = Runtime.getRuntime().availableProcessors();
     AlnIndexBuilder[] tasks = new AlnIndexBuilder[refAlns.size()];
     for(short i = 0; i < refAlns.size(); i++){
       Reference reference = refAlns.get(i);

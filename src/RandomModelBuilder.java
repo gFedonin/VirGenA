@@ -16,7 +16,7 @@ public class RandomModelBuilder{
   private static int threadNum = 1;
 
   private static void printUsage(){
-    System.out.println("Usage: java -cp ./ViRGA.jar RandomModelBuilder [Options]");
+    System.out.println("Usage: java -cp ./VirGenA.jar RandomModelBuilder [Options]");
     System.out.println("Options:");
     System.out.println("[-ref|-refMSA] path to reference or reference MSA in fasta format, " +
         "mandatory");
@@ -92,7 +92,7 @@ public class RandomModelBuilder{
         default:
           System.out.printf("Unknown parameter name %s\n", arg);
           printUsage();
-          break;
+          return;
       }
     }
     if(modelK == 0){
@@ -105,6 +105,7 @@ public class RandomModelBuilder{
     if(pathToReference == null){
       System.out.println("Path to reference or reference MSA must be provided!");
       printUsage();
+      return;
     }
     try{
       if(useMSA){

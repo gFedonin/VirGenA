@@ -160,14 +160,14 @@ class ProblemIntervalBuilder extends Constants{
     }
   }
 
-  Interval[] localizeProblemRegions()
+  ProblemInterval[] localizeProblemRegions()
       throws IOException, InterruptedException{
     float[] identity = new float[genome.length];
     int[] readCounts = new int[genome.length];
     countIdentity(identity, readCounts);
     boolean isGap = false;
-    ArrayList<Interval> problemRegions = new ArrayList<>();
-    Interval curr = new Interval();
+    ArrayList<ProblemInterval> problemRegions = new ArrayList<>();
+    ProblemInterval curr = new ProblemInterval();
     for(int i = 0; i < genome.length; i++){
       if(genome.seqB[i] == GAP){
         if(!isGap){
@@ -179,7 +179,7 @@ class ProblemIntervalBuilder extends Constants{
           isGap = false;
           curr.end = i;
           problemRegions.add(curr);
-          curr = new Interval();
+          curr = new ProblemInterval();
         }
         float avIdentity;
         if(readCounts[i] > 0){
@@ -188,7 +188,7 @@ class ProblemIntervalBuilder extends Constants{
           avIdentity = 0;
         }
         if(avIdentity < identityThreshold){
-          Interval interval = new Interval();
+          ProblemInterval interval = new ProblemInterval();
           interval.start = i;
           interval.end = i + windowSize;
           problemRegions.add(interval);
@@ -199,11 +199,11 @@ class ProblemIntervalBuilder extends Constants{
       curr.end = genome.length;
       problemRegions.add(curr);
     }
-    ArrayList<Interval> problemIntervalsArr = new ArrayList<>();
+    ArrayList<ProblemInterval> problemIntervalsArr = new ArrayList<>();
     if(problemRegions.size() > 0){
       Collections.sort(problemRegions);
-      Iterator<Interval> iter = problemRegions.iterator();
-      Interval prev = iter.next();
+      Iterator<ProblemInterval> iter = problemRegions.iterator();
+      ProblemInterval prev = iter.next();
       while(iter.hasNext()){
         curr = iter.next();
         if(curr.start - prev.end < anchorSize){
@@ -219,14 +219,14 @@ class ProblemIntervalBuilder extends Constants{
       problemIntervalsArr.add(prev);
     }
 
-    ArrayList<Interval> res = new ArrayList<>();
+    ArrayList<ProblemInterval> res = new ArrayList<>();
     if(genome.isFragmented){
-      for(Interval interval: problemIntervalsArr){
+      for(ProblemInterval interval: problemIntervalsArr){
         for(int i = 0; i < genome.fragmentEnds.length; i++){
           int end_i = genome.fragmentEnds[i];
           if(interval.start < end_i){
             if(interval.end > end_i){
-              Interval leftInterval = new Interval();
+              ProblemInterval leftInterval = new ProblemInterval();
               leftInterval.start = interval.start;
               leftInterval.end = end_i;
               res.add(leftInterval);
@@ -237,7 +237,7 @@ class ProblemIntervalBuilder extends Constants{
                   interval.start = endPrev;
                   break;
                 }else{
-                  Interval middleInterval = new Interval();
+                  ProblemInterval middleInterval = new ProblemInterval();
                   middleInterval.start = endPrev;
                   middleInterval.end = end_j;
                   res.add(middleInterval);
@@ -250,7 +250,7 @@ class ProblemIntervalBuilder extends Constants{
         }
         res.add(interval);
       }
-      for(Interval interval: res){
+      for(ProblemInterval interval: res){
         int fragmentStart = 0;
         for(int i = 0; i < genome.fragmentEnds.length; i++){
           int fragmentEnd = genome.fragmentEnds[i];
@@ -304,7 +304,7 @@ class ProblemIntervalBuilder extends Constants{
       }
     }else{
       res = problemIntervalsArr;
-      for(Interval interval: problemIntervalsArr){
+      for(ProblemInterval interval: problemIntervalsArr){
         if(interval.start < anchorSize){
           if(interval.end > genome.length - anchorSize){
             logger.printf("Not enough reads to assemble\n");
@@ -350,7 +350,7 @@ class ProblemIntervalBuilder extends Constants{
         }
       }
     }
-    return res.toArray(new Interval[res.size()]);
+    return res.toArray(new ProblemInterval[res.size()]);
   }
 
 

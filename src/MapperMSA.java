@@ -83,6 +83,38 @@ class MapperMSA extends Constants{
       int side2 = -1;
       for(int j = 0; j < forward1.length; j++){
         MappedRead read1 = forward1[j];
+        if(read1.count > count1){
+          count1 = read1.count;
+          side1 = 0;
+          maxInd1 = j;
+        }
+      }
+      for(int j = 0; j < reverse1.length; j++){
+        MappedRead read1 = reverse1[j];
+        if(read1.count > count1){
+          count1 = read1.count;
+          side1 = 1;
+          maxInd1 = j;
+        }
+      }
+      for(int k = 0; k < reverse2.length; k++){
+        MappedRead read2 = reverse2[k];
+        if(read2.count > count2){
+          count2 = read2.count;
+          side2 = 1;
+          maxInd2 = k;
+        }
+      }
+      for(int k = 0; k < forward2.length; k++){
+        MappedRead read2 = forward2[k];
+        if(read2.count > count2){
+          count2 = read2.count;
+          side2 = 0;
+          maxInd2 = k;
+        }
+      }
+      for(int j = 0; j < forward1.length; j++){
+        MappedRead read1 = forward1[j];
         for(int k = 0; k < reverse2.length; k++){
           MappedRead read2 = reverse2[k];
           if(read1.start < read2.end && read2.end - read1.start <= insertLen){
@@ -92,19 +124,7 @@ class MapperMSA extends Constants{
               max2 = k;
               side = 0;
             }
-          }else{
-            //int a = 0;
           }
-          if(read2.count > count2){
-            count2 = read2.count;
-            side2 = 1;
-            maxInd2 = k;
-          }
-        }
-        if(read1.count > count1){
-          count1 = read1.count;
-          side1 = 0;
-          maxInd1 = j;
         }
       }
       for(int j = 0; j < reverse1.length; j++){
@@ -118,19 +138,7 @@ class MapperMSA extends Constants{
               max2 = k;
               side = 1;
             }
-          }else{
-            //int a = 0;
           }
-          if(read2.count > count2){
-            count2 = read2.count;
-            side2 = 0;
-            maxInd2 = k;
-          }
-        }
-        if(read1.count > count1){
-          count1 = read1.count;
-          side1 = 1;
-          maxInd1 = j;
         }
       }
       switch(side){
@@ -287,13 +295,16 @@ class MapperMSA extends Constants{
       mappedReadNum += task.mappedReads.size();
     }
     int[] pairs = new int[mappedReadNum];
+    byte[] isConcordant = new byte[mappedReadNum];
     int c = 0;
     for(ReadMapping task: tasks){
       for(PairedRead read: task.concordant){
         res.mappedReads.add(read.r1);
         pairs[c] = c + 1;
+        isConcordant[c] = 1;
         res.mappedReads.add(read.r2);
         pairs[c + 1] = c;
+        isConcordant[c + 1] = 1;
         c += 2;
       }
       for(PairedRead read: task.leftMateMapped){
@@ -328,6 +339,7 @@ class MapperMSA extends Constants{
       readsTotal += task.readsTotal;
     }
     res.pairs = pairs;
+    res.isConcordant = isConcordant;
     logger.println("Mapping to MSA stats:");
     logger.printf("1) Total read pairs: %d\n", totalPairs);
     logger.printf("2) Total pairs with both reads exists: %d\n", bothExist);

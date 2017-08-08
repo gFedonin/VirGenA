@@ -19,6 +19,7 @@ public class Reference extends Constants{
   int[] seqToAln;
   HashMap<String, int[]> index;
   ArrayList<PairedRead> reads;
+  ArrayList<PairedRead> problemReads;
   String consensus;
   int refID;
   int[] contigEnds;
@@ -51,6 +52,9 @@ public class Reference extends Constants{
       }
     }
     seq = new String(s);
+    seqB = seq.getBytes();
+    contigEnds = new int[1];
+    contigEnds[0] = seq.length();
   }
 
   int alnToSeqStart(int start){
@@ -176,7 +180,7 @@ public class Reference extends Constants{
     int prevLen = 0;
     while((line = reader.readLine()) != null){
       if(line.startsWith(">")){
-        names.add(line.substring(1));
+        names.add(line.substring(1).replace(' ','_'));
         if(prevLen > 0){
           ends.add(prevLen);
         }
@@ -215,6 +219,7 @@ public class Reference extends Constants{
     }else{
       name = fragmentNames[0];
     }
+    name = name.replace(' ', '_');
   }
 
   public Reference(String pathToGenome, int K, int threadNum){

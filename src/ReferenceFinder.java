@@ -1,5 +1,6 @@
 import gnu.trove.iterator.TIntIterator;
 import gnu.trove.list.array.TIntArrayList;
+import gnu.trove.map.hash.TObjectIntHashMap;
 import org.jdom2.Document;
 import org.jdom2.Element;
 import org.jdom2.input.SAXBuilder;
@@ -41,9 +42,11 @@ public class ReferenceFinder extends Constants{
   Aligner aligner;
 
   private float uclustIdentity;
+  //private float identityThreshold = 0.99f;
+  private int batchSize;
   private int threadNum;
 
-  private boolean debug;
+  boolean debug;
 
   ReferenceFinder(Document document){
     config = document;
@@ -61,6 +64,7 @@ public class ReferenceFinder extends Constants{
     counter = KMerCounter.getInstance(document);
     aligner = new SmithWatermanGotoh(document);
     threadNum = Integer.parseInt(document.getRootElement().getChildText("ThreadNumber"));
+    batchSize = Integer.parseInt(document.getRootElement().getChildText("BatchSize"));
   }
 
   private void groupReads() throws IOException{
@@ -72,7 +76,7 @@ public class ReferenceFinder extends Constants{
     int readNumAfterLenFilter = 0;
     for(int i = 0; i < mappedData.mappedReads.size(); i++){
       MappedRead mappedRead = mappedData.mappedReads.get(i);
-      if(mappedRead.seq.length < minLen){
+      if(mappedRead.seq.length < minLen || mappedData.isConcordant[i] == 0){//
         continue;
       }
       readNumAfterLenFilter ++;
@@ -122,7 +126,7 @@ public class ReferenceFinder extends Constants{
       try{
         int start = windowID*winStep;
         int end = start + windowLen;
-        Process p = Runtime.getRuntime().exec(pathToUclust + " -sort length" +
+        Process p = Runtime.getRuntime().exec(pathToUclust + " -threads 1 -sort length" +
             " -cluster_fast " + outPath + start + "_" + end + "_reads.fasta -id " + Float.toString(uclustIdentity) +
             " -centroids " + outPath + "centroids_reads_" + start + "_" + end + ".fasta -uc " +
             outPath + "clusters_reads_" + start + "_" + end + ".uc");
@@ -225,20 +229,21 @@ public class ReferenceFinder extends Constants{
 
   private class SWScoreCounter implements Runnable{
 
-    private Cluster vertex;
+    private int vertexID;
     private ArrayList<Reference> references;
+    private int[][]clusterIDToScores;
 
-    int[] scores;
 
-    SWScoreCounter(ArrayList<Reference> refs, Cluster vertex){
-      this.vertex = vertex;
+    SWScoreCounter(int[][]clusterIDToScores, ArrayList<Reference> refs, int vertexID){
+      this.clusterIDToScores = clusterIDToScores;
+      this.vertexID = vertexID;
       references = refs;
     }
 
     @Override
     public void run(){
       int refNum = references.size();
-      scores = new int[refNum];
+      Cluster vertex = graph.vertices[vertexID];
       byte[] seq = vertex.contig.seq;
       for(int j = 0; j < refNum; j++){
         Reference ref = references.get(j);
@@ -251,47 +256,124 @@ public class ReferenceFinder extends Constants{
           continue;
         }
         Alignment aln = aligner.align(seq, ref.seq.substring(start, end).getBytes());
-        scores[j] = aln.score;
+        clusterIDToScores[vertexID][j] = aln.score;
       }
     }
+  }
+
+  private class ReadScoreComputer implements Runnable{
+
+    private int from;
+    private int to;
+    private int[][] readIDToScore;
+    private TIntArrayList[] readIDToCluster;
+    private int[][] clusterIdToScore;
+    private ArrayList<Reference> refs;
+
+    public ReadScoreComputer(ArrayList<Reference> refs, int[][] readIDToScore, TIntArrayList[] readIDToCluster, int[][] clusterIdToScore, int from, int to){
+      this.refs = refs;
+      this.readIDToScore = readIDToScore;
+      this.readIDToCluster = readIDToCluster;
+      this.clusterIdToScore = clusterIdToScore;
+      this.from = from;
+      this.to = to;
+    }
+
+    @Override
+    public void run(){
+      for(int i = from; i < to; i++){
+        MappedRead read = mappedData.mappedReads.get(i);
+        TIntArrayList clusterIDs = readIDToCluster[i];
+        int bestClusterID = 0;
+//        float maxIdentity = 0;
+//        int maxReadNum = 0;
+        int longestLength = 0;
+        for(TIntIterator iter = clusterIDs.iterator(); iter.hasNext();){
+          int clusterID = iter.next();
+          Cluster cluster = graph.vertices[clusterID];
+//          if(cluster.readNum > maxReadNum){
+//            maxReadNum = cluster.readNum;
+//            bestClusterID = clusterID;
+//          }
+          if(cluster.contig.seq.length > longestLength){
+            longestLength = cluster.contig.seq.length;
+            bestClusterID = clusterID;
+          }
+//          MappedRead mRead = cluster.mReads.get(i);
+//          float identity = (float)mRead.aln.identity/mRead.aln.length;
+//          if(identity > maxIdentity){
+//            maxIdentity = identity;
+//            bestClusterID = clusterID;
+//          }
+        }
+//        if(longestLength > 0){//if(maxIdentity > identityThreshold){
+//          Alignment aln = aligner.align(read.seq, graph.vertices[bestClusterID].contig.seq);
+//          maxIdentity = (float)aln.identity/aln.length;
+//        }
+        if(longestLength > 0){//maxIdentity > identityThreshold
+          readIDToScore[i] = clusterIdToScore[bestClusterID];
+        }
+//        else{
+//          // we have to align this read;
+//          for(int j = 0; j < refs.size(); j++){
+//            Reference ref = refs.get(j);
+//            MappedRead mRead = counter.mapReadToRegion(read.seq, ref.index, ref.contigEnds);
+//            Alignment aln = aligner.align(read.seq, Arrays.copyOfRange(ref.seqB, mRead.start, mRead.end));
+//            readIDToScore[i][j] = aln.score;
+//          }
+//        }
+      }
+    }
+
   }
 
   private ArrayList<Reference> sortReadsToSelectedRef(HashMap<String, int[]> selectedRef)
       throws IOException, InterruptedException{
     ArrayList<Reference> res = new ArrayList<>();
+    TObjectIntHashMap<String> refNameToID = new TObjectIntHashMap<>();
     for(Map.Entry<String, int[]> entry: selectedRef.entrySet()){
       Reference seq = refAlignment.refSeqs.get(entry.getKey());
       seq.reads = new ArrayList<>();
+      seq.problemReads = new ArrayList<>();
+      //seq.buildIndex(config);
       res.add(seq);
+      refNameToID.put(seq.name, res.size() - 1);
     }
-    SWScoreCounter[] tasks = new SWScoreCounter[graph.vertices.length];
     ExecutorService executor = Executors.newFixedThreadPool(threadNum);
-    int[] readIDToCluster = new int[mappedData.mappedReads.size()];
+    int readNum = mappedData.mappedReads.size();
+    TIntArrayList[] readIDToCluster = new TIntArrayList[readNum];
     for(int i = 0; i < readIDToCluster.length; i++){
-      readIDToCluster[i] = -1;
+      readIDToCluster[i] = new TIntArrayList();
     }
+    int refNum = selectedRef.size();
+    int[][]clusterIDToScores = new int[graph.vertices.length][refNum];
     for(int i = 0; i < graph.vertices.length; i++){
       Cluster vertex = graph.vertices[i];
       for(TIntIterator iter = vertex.readIDs.iterator(); iter.hasNext();){
-        readIDToCluster[iter.next()] = i;
+        readIDToCluster[iter.next()].add(i);
       }
-      SWScoreCounter task = new SWScoreCounter(res, vertex);
+      SWScoreCounter task = new SWScoreCounter(clusterIDToScores, res, i);
       executor.execute(task);
-      tasks[i] = task;
     }
     executor.shutdown();
     executor.awaitTermination(10, TimeUnit.HOURS);
-    int refNum = selectedRef.size();
+    int[][] readIDToScore = new int[readNum][refNum];
+    executor = Executors.newFixedThreadPool(threadNum);
+    ArrayList<ReadScoreComputer> tasks = new ArrayList<>();
+    for(int i = 0; i < readNum; i += batchSize){
+      ReadScoreComputer task = new ReadScoreComputer(res, readIDToScore, readIDToCluster, clusterIDToScores, i,
+          Math.min(i + batchSize, readNum));
+      tasks.add(task);
+      executor.execute(task);
+    }
+    executor.shutdown();
+    executor.awaitTermination(10, TimeUnit.HOURS);
     for(int i = 0; i < mappedData.mappedReads.size(); i++){
       MappedRead mappedRead = mappedData.mappedReads.get(i);
       int pairID = mappedData.pairs[i];
       PairedRead pairedRead;
-      int maxScore = 0;
       TIntArrayList refIDs = new TIntArrayList();
       if(pairID == -1){
-        if(mappedRead.seq.length < minLen || readIDToCluster[i] == -1){
-          continue;
-        }
         byte[] s;
         if(mappedRead.reverse == 1){
           s = getComplement(mappedRead.seq);
@@ -303,17 +385,23 @@ public class ReferenceFinder extends Constants{
         }else{
           pairedRead = new PairedRead(mappedRead.name, NULL_SEQ, s, NULL_SEQ, mappedRead.q);
         }
-        SWScoreCounter task = tasks[readIDToCluster[i]];
-        for(int j = 0; j < refNum; j++){
-          int sumScore = task.scores[j];
-          if(sumScore > maxScore){
-            maxScore = sumScore;
-            refIDs.clear();
-            refIDs.add(j);
-          }else if(sumScore == maxScore){
-            refIDs.add(j);
-          }
+        for(Reference ref: res){
+          ref.problemReads.add(new PairedRead(pairedRead));
         }
+////        if(readIDToCluster[i].size() == 0){//mappedRead.seq.length < minLen ||
+////          continue;
+////        }
+//        int maxScore = 0;
+//        for(int j = 0; j < refNum; j++){
+//          int sumScore = readIDToScore[i][j];
+//          if(sumScore > maxScore){
+//            maxScore = sumScore;
+//            refIDs.clear();
+//            refIDs.add(j);
+//          }else if(sumScore == maxScore){
+//            refIDs.add(j);
+//          }
+//        }
       }else{
         if(pairID < i){
           continue;
@@ -336,61 +424,37 @@ public class ReferenceFinder extends Constants{
         }else{
           pairedRead = new PairedRead(mappedRead.name, s2, s1, readPair.q, mappedRead.q);
         }
-        if(mappedRead.seq.length < minLen || readIDToCluster[i] == -1){
-          if(readPair.seq.length < minLen || readIDToCluster[pairID] == -1){
-            continue;
+        if(mappedData.isConcordant[i] == 0 || readIDToCluster[i].size() == 0 || readIDToCluster[pairID].size() == 0){//mappedRead.seq.length < minLen || readPair.seq.length < minLen ||
+          for(Reference ref: res){
+            ref.problemReads.add(new PairedRead(pairedRead));
           }
-          SWScoreCounter task = tasks[readIDToCluster[pairID]];
-          for(int j = 0; j < refNum; j++){
-            int sumScore = task.scores[j];
-            if(sumScore > maxScore){
-              maxScore = sumScore;
-              refIDs.clear();
-              refIDs.add(j);
-            }else if(sumScore == maxScore){
-              refIDs.add(j);
-            }
+          continue;
+        }
+        for(int j = 0, maxScore = 0; j < refNum; j++){
+          int sumScore = readIDToScore[i][j] + readIDToScore[pairID][j];
+          if(sumScore > maxScore){
+            maxScore = sumScore;
+            refIDs.clear();
+            refIDs.add(j);
+          }else if(sumScore == maxScore){
+            refIDs.add(j);
           }
-        }else{
-          if(readPair.seq.length < minLen || readIDToCluster[pairID] == -1){
-            SWScoreCounter task = tasks[readIDToCluster[i]];
-            for(int j = 0; j < refNum; j++){
-              int sumScore = task.scores[j];
-              if(sumScore > maxScore){
-                maxScore = sumScore;
-                refIDs.clear();
-                refIDs.add(j);
-              }else if(sumScore == maxScore){
-                refIDs.add(j);
-              }
-            }
-          }else{
-            SWScoreCounter task = tasks[readIDToCluster[i]];
-            SWScoreCounter taskPair = tasks[readIDToCluster[pairID]];
-            for(int j = 0; j < refNum; j++){
-              int sumScore = task.scores[j] + taskPair.scores[j];
-              if(sumScore > maxScore){
-                maxScore = sumScore;
-                refIDs.clear();
-                refIDs.add(j);
-              }else if(sumScore == maxScore){
-                refIDs.add(j);
-              }
+        }
+        if(res.size() > 0){
+          res.get(refIDs.getQuick(0)).reads.add(pairedRead);
+          if(refIDs.size() > 1){
+            for(int j = 1; j < refIDs.size(); j++){
+              res.get(refIDs.getQuick(j)).reads.add(new PairedRead(pairedRead));
             }
           }
         }
       }
-      if(res.size() > 0){
-        res.get(refIDs.getQuick(0)).reads.add(pairedRead);
-        if(refIDs.size() > 1){
-          for(int j = 1; j < refIDs.size(); j++){
-            res.get(refIDs.getQuick(j)).reads.add(new PairedRead(pairedRead));
-          }
-        }
-      }
+
     }
+
     return res;
   }
+
 
   public ArrayList<Reference> selectReferences(ArrayList<PairedRead> reads) throws InterruptedException, IOException, IllegalAccessException, InstantiationException, InvocationTargetException{
     long time = System.currentTimeMillis();
@@ -441,17 +505,19 @@ public class ReferenceFinder extends Constants{
   }
 
   private static void printUsage(){
-    System.out.println("Usage: java -cp ./ViRGA.jar ReferenceFinder pathToConfigFile");
+    System.out.println("Usage: java -cp ./VirGenA.jar ReferenceFinder pathToConfigFile");
   }
 
   public static void main(String[] args){
     try{
-      if(args[0].equals("-h") || args.length == 0){
+      if(args.length == 0 || args[0].equals("-h")){
         printUsage();
+        return;
       }
       if(args.length != 1){
         System.out.println("Wrong parameter number!");
         printUsage();
+        return;
       }
       SAXBuilder jdomBuilder = new SAXBuilder();
       Document jdomDocument = jdomBuilder.build(args[0]);

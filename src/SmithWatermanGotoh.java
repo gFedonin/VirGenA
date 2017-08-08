@@ -314,4 +314,25 @@ class SmithWatermanGotoh extends Aligner{
         return b;
     }
 
+    public static void main(String[] args){
+        try{
+            SAXBuilder jdomBuilder = new SAXBuilder();
+            Document jdomDocument = jdomBuilder.build("./config.xml");
+            SmithWatermanGotoh aligner = new SmithWatermanGotoh(jdomDocument);
+            String read = "AATATAGGAAAATAAGAAAACAAAAGAAAATAAACAGGTTAATTGATAGAATAAGAGAAAGAGCAGAAGACAGTGGCAATGAGAGCGAGGGAGATCAAGAAGAATTGTCAGCACTGGTGGTGGAGATGGGGCATCATGCTCCTTGGGATGTGGATGATTTGTAGTGCTGCAGAACAATTGTGGGTTACAGTTTATTATGGGGTTCCTGTGTGGAGAGATGCAGATACCACCCTATTTTGTGCATCAGATG";
+            ReferenceAlignment refAlignment = ReferenceAlignment.getInstance(jdomDocument);
+            Alignment aln = aligner.align(read.getBytes(), refAlignment.refSeqs.get("B.US.86.JRFL_JR_FL.U63632").seqB);
+            System.out.printf("Score1 B = %d start = %d end = %d\n", aln.score, aln.start2, aln.end2);
+            aln = aligner.align(read.getBytes(), refAlignment.refSeqs.get("01_AE.TH.90.CM240.U54771").seqB);
+            System.out.printf("Score1 01_AE = %d start = %d end = %d\n", aln.score, aln.start2, aln.end2);
+            byte[] readB = getComplement("GTGGCCCAGATATTGTGCATTTCTGTCTCATGTCCTTTAGCATCTGATGCACAAAATAGGGTGGTATCTGCATCTCTCCACACAGGAACCCCATAATAAACTGTAACCCACAATTGTTCTGCAGCACTACAAATCATCCACATCCCAAGGAGCATGATGCCCCATCTCCACCACCAGTGCTGACAATTCTTCTTGATCTCCCTCGCTCTCATTGCCACTGTCTTCTGCTCTTTCTCTTATTCTATCAATT".getBytes());
+            aln = aligner.align(readB, refAlignment.refSeqs.get("B.US.86.JRFL_JR_FL.U63632").seqB);
+            System.out.printf("Score2 B = %d start = %d end = %d\n", aln.score, aln.start2, aln.end2);
+            aln = aligner.align(readB, refAlignment.refSeqs.get("01_AE.TH.90.CM240.U54771").seqB);
+            System.out.printf("Score2 01_AE = %d start = %d end = %d\n", aln.score, aln.start2, aln.end2);
+        }catch(Exception e){
+            e.printStackTrace();
+        }
+    }
+
 }

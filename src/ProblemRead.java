@@ -32,7 +32,7 @@ class ProblemRead extends MappedRead{
     end = (short)mRead.end;
   }
 
-  void extendAlignmentLeft(Interval gap){
+  void extendAlignmentLeft(ProblemInterval gap){
     byte[] gapSeq = gap.concat;
     short junction = gap.junction;
     end ++;
@@ -93,7 +93,7 @@ class ProblemRead extends MappedRead{
     }
   }
 
-  void extendAlignmentRight(Interval gap){
+  void extendAlignmentRight(ProblemInterval gap){
     byte[] gapSeq = gap.concat;
     short junction = gap.junction;
     if(mappingType == 1){
@@ -159,17 +159,17 @@ class ProblemRead extends MappedRead{
     }
   }
 
-  void alignSW(Interval gap, Aligner aligner){
+  void alignSW(ProblemInterval gap, Aligner aligner){
     byte[] g = Arrays.copyOfRange(gap.concat, start, end);
     aln = new EdgeAlignment(aligner.align(seq, g), start, gap);
   }
 
-  void alignSWLeft(Interval gap, Aligner aligner){
+  void alignSWLeft(ProblemInterval gap, Aligner aligner){
     byte[] g = Arrays.copyOfRange(gap.left, start, end);
     aln = new EdgeAlignment(aligner.align(seq, g), start, gap.left.length, true);
   }
 
-  void alignSWRight(Interval gap, Aligner aligner){
+  void alignSWRight(ProblemInterval gap, Aligner aligner){
     byte[] g = Arrays.copyOfRange(gap.right, start, end);
     aln = new EdgeAlignment(aligner.align(seq, g), start, gap.right.length, false);
   }

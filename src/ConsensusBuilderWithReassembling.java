@@ -17,7 +17,7 @@ public class ConsensusBuilderWithReassembling extends ConsensusBuilderSimple{
   private ArrayList<ProblemRead> problemReads;
   protected ArrayList<PairedRead> reads;
   private ProblemReadMapper problemReadMapper;
-  Interval[] problemIntervals;
+  ProblemInterval[] problemIntervals;
   private byte[] simpleConsensus;
   private float identityThreshold;
   private int minLen;
@@ -56,7 +56,7 @@ public class ConsensusBuilderWithReassembling extends ConsensusBuilderSimple{
     if(read == null || read.seq.length < minLen){
       return null;
     }
-    Interval temp = new Interval();
+    ProblemInterval temp = new ProblemInterval();
     temp.start = (short)(read.aln.start2 + read.start);
     temp.end = (short)(read.aln.end2 + read.start);
     short i = (short)Arrays.binarySearch(problemIntervals, temp);
@@ -66,7 +66,7 @@ public class ConsensusBuilderWithReassembling extends ConsensusBuilderSimple{
     int readLen = read.seq.length;
     short cutoff = (short)mapper.counter.cutoffs[readLen];
     if(i == problemIntervals.length){
-      Interval prev = problemIntervals[i - 1];
+      ProblemInterval prev = problemIntervals[i - 1];
       if(temp.start - read.aln.start1 < prev.end){
         ProblemRead pRead = new ProblemRead(read.name, read.n, read.seq, (short)(i - 1), read.reverse);
         pRead.count = -1;
@@ -77,7 +77,7 @@ public class ConsensusBuilderWithReassembling extends ConsensusBuilderSimple{
       return null;
     }
     if(i == 0){
-      Interval next = problemIntervals[i];
+      ProblemInterval next = problemIntervals[i];
       if(temp.end + read.seq.length - read.aln.end1 > next.start){
         ProblemRead pRead = new ProblemRead(read.name, read.n, read.seq, i, read.reverse);
         pRead.count = -1;
@@ -87,8 +87,8 @@ public class ConsensusBuilderWithReassembling extends ConsensusBuilderSimple{
       }
       return null;
     }
-    Interval prev = problemIntervals[i - 1];
-    Interval next = problemIntervals[i];
+    ProblemInterval prev = problemIntervals[i - 1];
+    ProblemInterval next = problemIntervals[i];
     int intersectsPrev = prev.end - temp.start + read.aln.start1;
     int intersectsNext = temp.end + read.seq.length - read.aln.end1 - next.start;
     if(intersectsNext > 0){
@@ -138,7 +138,7 @@ public class ConsensusBuilderWithReassembling extends ConsensusBuilderSimple{
 
   private boolean growLeftEdges() throws InterruptedException{
     boolean someIntervalWasUpdated = false;
-    for(Interval gap : problemIntervals){
+    for(ProblemInterval gap : problemIntervals){
       if(gap.growLeftEdge(coverageThreshold)){
         someIntervalWasUpdated = true;
         gap.buildIndexLeft(K, threadNum);
@@ -150,7 +150,7 @@ public class ConsensusBuilderWithReassembling extends ConsensusBuilderSimple{
 
   private boolean growRightEdges() throws InterruptedException{
     boolean someIntervalWasUpdated = false;
-    for(Interval gap : problemIntervals){
+    for(ProblemInterval gap : problemIntervals){
       if(gap.growRightEdge(coverageThreshold)){
         someIntervalWasUpdated = true;
         gap.buildIndexRight(K, threadNum);
@@ -201,14 +201,14 @@ public class ConsensusBuilderWithReassembling extends ConsensusBuilderSimple{
     }
     logger.println("Read counts in gaps:");
     for(int i = 0; i < problemIntervals.length; i++){
-      Interval gap = problemIntervals[i];
+      ProblemInterval gap = problemIntervals[i];
       logger.println(gap.start + " " + gap.end + ": " + gapReadCounts[i] + " F: " +
           (float)gapReadCountsF[i]/gapReadCounts[i] + " R: " +
           (float)gapReadCountsR[i]/gapReadCounts[i]);
     }
   }
 
-  private void mergeEdges(Interval interval, Aligner aligner, float identityThreshold,
+  private void mergeEdges(ProblemInterval interval, Aligner aligner, float identityThreshold,
                           int minFinalReads, int minIntersectLen){
     if(interval.concat.length == 0){
       interval.seqFinal = "------";
@@ -315,19 +315,6 @@ public class ConsensusBuilderWithReassembling extends ConsensusBuilderSimple{
     }
   }
 
-//  void indexBam(String bamPath) throws IOException, InterruptedException{
-//    Process p = Runtime.getRuntime().exec("samtools index " + bamPath);
-//    BufferedReader streamReader = new BufferedReader(new InputStreamReader(p.getInputStream()));
-//    String line;
-//    while((line = streamReader.readLine()) != null){
-//      //System.out.println(line);
-//    }
-//    streamReader = new BufferedReader(new InputStreamReader(p.getErrorStream()));
-//    while((line = streamReader.readLine()) != null){
-//      //System.out.println(line);
-//    }
-//    p.waitFor();
-//  }
 
   @Override
   public String buildConsensus(Reference genome, ArrayList<PairedRead> reads){
@@ -401,7 +388,7 @@ public class ConsensusBuilderWithReassembling extends ConsensusBuilderSimple{
       while(true){
         //logger.println("Gap growing iteration " + iterNum);
         problemReadMapper.insertLoops();
-        for(Interval interval : problemIntervals){
+        for(ProblemInterval interval : problemIntervals){
           if(interval.seqFinal == null && interval.finalizingReadsFound >= minFinalReads){
             mergeEdges(interval, mapper.aligner, identityThreshold,
                     minFinalReads, minIntersectLen);
@@ -412,7 +399,7 @@ public class ConsensusBuilderWithReassembling extends ConsensusBuilderSimple{
         boolean leftUpdated = growLeftEdges();
         problemReadMapper.mapProblemReadsLeft();
         problemReadMapper.insertLoops();
-        for(Interval interval : problemIntervals){
+        for(ProblemInterval interval : problemIntervals){
           if(interval.seqFinal == null && interval.finalizingReadsFound >= minFinalReads){
             mergeEdges(interval, mapper.aligner, identityThreshold,
                     minFinalReads, minIntersectLen);
@@ -421,7 +408,7 @@ public class ConsensusBuilderWithReassembling extends ConsensusBuilderSimple{
         problemReadMapper.countRightEdgeFreqs();
         boolean rightUpdated = growRightEdges();
         problemReadMapper.mapProblemReadsRight();
-        for(Interval interval : problemIntervals){
+        for(ProblemInterval interval : problemIntervals){
           if(interval.seqFinal == null && !interval.updatedLeft && !interval.updatedRight){
             mergeEdges(interval, mapper.aligner, identityThreshold,
                     minFinalReads, minIntersectLen);
@@ -433,14 +420,14 @@ public class ConsensusBuilderWithReassembling extends ConsensusBuilderSimple{
         }
       }
       //finalizing all intervals
-      for(Interval interval : problemIntervals){
+      for(ProblemInterval interval : problemIntervals){
         if(interval.seqFinal == null){
           mergeEdges(interval, mapper.aligner, identityThreshold,
                   minFinalReads, minIntersectLen);
         }
       }
       logger.println("Inserted:");
-      for(Interval interval : problemIntervals){
+      for(ProblemInterval interval : problemIntervals){
         logger.println(interval.start + " " + interval.end + " " + interval.seqFinal);
       }
       // building final assembly
@@ -454,7 +441,7 @@ public class ConsensusBuilderWithReassembling extends ConsensusBuilderSimple{
         TByteArrayList builder = new TByteArrayList();
         int predPos = 0;
         int assemblyPos = 0;
-        for(Interval interval : problemIntervals){
+        for(ProblemInterval interval : problemIntervals){
           while(interval.start >= genome.contigEnds[fragmentID]){
             int endPos = genome.contigEnds[fragmentID];
             if(builder.size() > 0){
@@ -549,7 +536,7 @@ public class ConsensusBuilderWithReassembling extends ConsensusBuilderSimple{
         TByteArrayList builder = new TByteArrayList();
         int predPos = 0;
         int assemblyPos = 0;
-        for(Interval interval : problemIntervals){
+        for(ProblemInterval interval : problemIntervals){
           builder.add(simpleConsensus, predPos, interval.start - predPos);
           for(int i = predPos; i < interval.start; i++){
             genomeToAssembly[i] = assemblyPos;
@@ -613,18 +600,25 @@ public class ConsensusBuilderWithReassembling extends ConsensusBuilderSimple{
       }
       BufferedWriter writer = new BufferedWriter(new FileWriter(outPath + assemblyName));
       for(int i = 0; i < contigsFragmented.length; i++){
-        if(contigsFragmented[i].size() == 1){
-          byte[] subContig = contigsFragmented[i].get(0);
+        ArrayList<byte[]> contigs = new ArrayList<>();
+        for(int k = 0; k < contigsFragmented[i].size(); k++){
+          byte[] subContig = contigsFragmented[i].get(k);
+          if(subContig.length > 0){
+            contigs.add(subContig);
+          }
+        }
+        if(contigs.size() == 1){
+          byte[] subContig = contigs.get(0);
           String str = new String(subContig);
-          writer.write(">" + fragmentNames[i].replace(' ', '_'));
+          writer.write(">" + fragmentNames[i]);
           writer.newLine();
           writer.write(str);
           writer.newLine();
         }else{
-          for(int k = 0; k < contigsFragmented[i].size(); k++){
-            byte[] subContig = contigsFragmented[i].get(k);
+          for(int k = 0; k < contigs.size(); k++){
+            byte[] subContig = contigs.get(k);
             String str = new String(subContig);
-            writer.write(">" + fragmentNames[i].replace(' ', '_') + "_" + Integer.toString(k + 1));
+            writer.write(">" + fragmentNames[i] + "_" + Integer.toString(k + 1));
             writer.newLine();
             writer.write(str);
             writer.newLine();
@@ -641,12 +635,25 @@ public class ConsensusBuilderWithReassembling extends ConsensusBuilderSimple{
           prev = contigEnds[i];
         }
       }
+      ArrayList<String> contigsNonzero = new ArrayList<>();
+      for(String subContig: contigs){
+        if(subContig.length() > 0){
+          contigsNonzero.add(subContig);
+        }
+      }
       BufferedWriter writer = new BufferedWriter(new FileWriter(outPath + assemblyName));
-      for(int i = 0; i < contigs.length; i++){
-        writer.write(">" + genomeName.replace(' ', '_') + "_" + Integer.toString(i + 1));
+      if(contigsNonzero.size() == 1){
+        writer.write(">" + genomeName);
         writer.newLine();
-        writer.write(contigs[i]);
+        writer.write(contigsNonzero.get(0));
         writer.newLine();
+      }else{
+        for(int i = 0; i < contigsNonzero.size(); i++){
+          writer.write(">" + genomeName + "_" + Integer.toString(i + 1));
+          writer.newLine();
+          writer.write(contigsNonzero.get(i));
+          writer.newLine();
+        }
       }
       writer.close();
     }
@@ -667,14 +674,14 @@ public class ConsensusBuilderWithReassembling extends ConsensusBuilderSimple{
     ArrayList<MappedRead> mappedReads = new ArrayList<>();
     outer:
     for(PairedRead pairedRead: mappedData.concordant){
-      for(Interval problemInterval: problemIntervals){
+      for(ProblemInterval problemInterval: problemIntervals){
         if(pairedRead.r1.start + pairedRead.r1.aln.start2 < problemInterval.end &&
             pairedRead.r1.start + pairedRead.r1.aln.end2 > problemInterval.start){
           mappedData.needToRemap.add(pairedRead);
           continue outer;
         }
       }
-      for(Interval problemInterval: problemIntervals){
+      for(ProblemInterval problemInterval: problemIntervals){
         if(pairedRead.r2.start + pairedRead.r2.aln.start2 < problemInterval.end &&
             pairedRead.r2.start + pairedRead.r2.aln.end2 > problemInterval.start){
           mappedData.needToRemap.add(pairedRead);
@@ -692,7 +699,7 @@ public class ConsensusBuilderWithReassembling extends ConsensusBuilderSimple{
       if(!Arrays.equals(pairedRead.seq2, NULL_SEQ)){
         mappedData.needToRemap.add(pairedRead);
       }else{
-        for(Interval problemInterval : problemIntervals){
+        for(ProblemInterval problemInterval : problemIntervals){
           if(pairedRead.r1.start + pairedRead.r1.aln.start2 < problemInterval.end &&
               pairedRead.r1.start + pairedRead.r1.aln.end2 > problemInterval.start){
             mappedData.needToRemap.add(pairedRead);
@@ -709,7 +716,7 @@ public class ConsensusBuilderWithReassembling extends ConsensusBuilderSimple{
       if(!Arrays.equals(pairedRead.seq1, NULL_SEQ)){
         mappedData.needToRemap.add(pairedRead);
       }else{
-        for(Interval problemInterval : problemIntervals){
+        for(ProblemInterval problemInterval : problemIntervals){
           if(pairedRead.r2.start + pairedRead.r2.aln.start2 < problemInterval.end &&
               pairedRead.r2.start + pairedRead.r2.aln.end2 > problemInterval.start){
             mappedData.needToRemap.add(pairedRead);

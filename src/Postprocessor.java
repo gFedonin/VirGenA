@@ -4,6 +4,7 @@ import org.jdom2.JDOMException;
 
 import java.io.*;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.TreeSet;
 
 /**
@@ -12,10 +13,11 @@ import java.util.TreeSet;
 class Postprocessor extends Constants{
 
   private float minIdentity;
-  //private float threshold;
+  private float minCoverage;
   private int minLen;
   private String outPath;
   private boolean debug;
+  private int threadNum;
 
   Postprocessor(Document document){
     Element element = document.getRootElement().getChild("Postprocessor");
@@ -23,7 +25,8 @@ class Postprocessor extends Constants{
     outPath = document.getRootElement().getChildText("OutPath");
     minLen = Integer.parseInt(element.getChildText("MinFragmentLength"));
     minIdentity = Float.parseFloat(element.getChildText("MinIdentity"));
-    //threshold = Float.parseFloat(element.getChildText("MinIdentityDifference"));
+    threadNum = Integer.parseInt(document.getRootElement().getChildText("ThreadNumber"));
+    minCoverage = Float.parseFloat(element.getChildText("MinFragmentCoverage"));
   }
 
   private void makeBlastDB(String[] assemblies, Reference[] refSeqs) throws IOException, InterruptedException{
@@ -81,15 +84,15 @@ class Postprocessor extends Constants{
     file.delete();
   }
 
-  private float refIdentity(HSP interval, Reference seq1, Reference seq2){
+  private float refIdentity(HSP interval, Reference seq1, Reference seq2, int[] seqToAln){
     int identity = 0;
     int len = 0;
-    int start = seq1.seqToAln[interval.startS];
+    int start = seqToAln[interval.startS];
     int end;
-    if(interval.endS == seq1.seq.length()){
+    if(interval.endS == seqToAln.length){
       end = seq1.aln.length();
     }else{
-      end = seq1.seqToAln[interval.endS];
+      end = seqToAln[interval.endS];
     }
     for(int i = start; i < end; i++){
       char c1 = seq1.aln.charAt(i);
@@ -116,7 +119,6 @@ class Postprocessor extends Constants{
     String hitSeq = assembly.substring(interval.startQ, interval.endQ);
 //    Process p = Runtime.getRuntime().exec(
 //        "blastn -outfmt 5 -db refSeqDB", new String[]{"BLASTDB=" + outPath}, null);
-    int threadNum = Runtime.getRuntime().availableProcessors();
     Process p = Runtime.getRuntime().exec(
             "blastn -num_threads " + threadNum + " -outfmt 10 -db refSeqDB", new String[]{"BLASTDB=" + outPath}, null);
     BufferedWriter streamWriter =
@@ -182,30 +184,14 @@ class Postprocessor extends Constants{
       if(bestInt2 == null){
         return 1;
       }else{
-//        if(Math.abs(bestInt1.identity - bestInt2.identity) < threshold){
-//          return 12;
-//        }
-//        if(bestInt1.identity <= bestInt2.identity){
-//          if(refIdentity(bestInt2, ref1, ref2) < minIdentity){
-//            return 2;
-//          }else{
-//            return 12;
-//          }
-//        }else{
-//          if(refIdentity(bestInt1, ref1, ref2) < minIdentity){
-//            return 1;
-//          }else{
-//            return 12;
-//          }
-//        }
         if(readNum1 <= readNum2){
-          if(refIdentity(bestInt2, ref1, ref2) < minIdentity){
+          if(refIdentity(bestInt2, ref1, ref2, ref2.seqToAln) < minIdentity){
             return 2;
           }else{
             return 12;
           }
         }else{
-          if(refIdentity(bestInt1, ref1, ref2) < minIdentity){
+          if(refIdentity(bestInt1, ref1, ref2, ref1.seqToAln) < minIdentity){
             return 1;
           }else{
             return 12;
@@ -216,21 +202,21 @@ class Postprocessor extends Constants{
     return 12;
   }
 
-  private ArrayList<HSP> getSimilarFragments(String seqName, String seq, String dbName) throws IOException, InterruptedException, JDOMException{
+  private ArrayList<HSP> getSimilarFragments(String seqQ, int[] contigEndsQ, String refNameQ, String refNameS,
+                                             int[] contigEndsS) throws IOException, InterruptedException, JDOMException{
     ArrayList<HSP> hsps = new ArrayList<>();
 //    Process p = Runtime.getRuntime().exec(
 //        "blastn -outfmt 5 -db " + dbName, new String[]{"BLASTDB=" + outPath}, null);
-    int threadNum = Runtime.getRuntime().availableProcessors();
     Process p = Runtime.getRuntime().exec(
-            "blastn -num_threads " + threadNum + " -outfmt 10 -db " + dbName, new String[]{"BLASTDB=" + outPath}, null);
+            "blastn -num_threads " + threadNum + " -outfmt 10 -db " + refNameS, new String[]{"BLASTDB=" + outPath}, null);
     BufferedWriter streamWriter =
         new BufferedWriter(new OutputStreamWriter(p.getOutputStream()));
-    streamWriter.write(seq);
+    streamWriter.write(seqQ);
     streamWriter.close();
     ArrayList<BlastHit> list;
     if(debug){
       BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
-      BufferedWriter writer = new BufferedWriter(new FileWriter(outPath + seqName + "-" + dbName + ".csv"));
+      BufferedWriter writer = new BufferedWriter(new FileWriter(outPath + refNameQ + "-" + refNameS + ".csv"));
       String line;
       while((line = reader.readLine()) != null){
         writer.write(line);
@@ -242,7 +228,7 @@ class Postprocessor extends Constants{
         System.out.println(line);
       }
       p.waitFor();
-      list = BlastParser.parseBlastCSV(new FileInputStream(outPath + seqName + "-" + dbName + ".csv"));
+      list = BlastParser.parseBlastCSV(new FileInputStream(outPath + refNameQ + "-" + refNameS + ".csv"));
     }else{
       list = BlastParser.parseBlastCSV(p.getInputStream());
       p.waitFor();
@@ -258,6 +244,16 @@ class Postprocessor extends Constants{
         if(hsp.identity >= minIdentity){
           if(Math.min(hsp.endQ - hsp.startQ, hsp.endS - hsp.startS) >= minLen){
             hsps.add(hsp);
+          }else{
+            int startOfContigQ = getContigStart(hsp.startQ, contigEndsQ);
+            int endOfContigQ = getContigEnd(hsp.endQ, contigEndsQ);
+            int startOfContigS = getContigStart(hsp.startS, contigEndsS);
+            int endOfContigS = getContigEnd(hsp.endS, contigEndsS);
+            float covQ = (float)(hsp.endQ - hsp.startQ)/(endOfContigQ - startOfContigQ);
+            float covS = (float)(hsp.endS - hsp.startS)/(endOfContigS - startOfContigS);
+            if(covQ >= minCoverage || covS >= minCoverage){
+              hsps.add(hsp);
+            }
           }
         }
       }
@@ -265,61 +261,71 @@ class Postprocessor extends Constants{
     return hsps;
   }
 
-  static class SendToInterval implements Comparable{
-    int start;
-    int end;
-    int assemblyID;
-
-    SendToInterval(int s, int e, int id){
-      start = s;
-      end = e;
-      assemblyID = id;
+  private static int getContigStart(int pos, int[] contigEnds){
+    int startOfContig = 0;
+    for(int contigEnd : contigEnds){
+      if(pos < contigEnd){
+        return startOfContig;
+      }else{
+        startOfContig = contigEnd;
+      }
     }
-
-    @Override
-    public int compareTo(Object o){
-      SendToInterval interval = (SendToInterval) o;
-      return start - interval.start;
-    }
+    return startOfContig;
   }
 
-  ArrayList<SendToInterval>[] findRegionsToCut(String[] assemblies, Reference[] selectedRefs, int[] readNums) throws IOException, InterruptedException, JDOMException{
-    makeBlastDB(assemblies, selectedRefs);
-    ArrayList<SendToInterval>[] intervals = new ArrayList[assemblies.length];
+  private static int getContigEnd(int pos, int[] contigEnds){
+    int endOfContig = 0;
+    for(int contigEnd : contigEnds){
+      if(pos <= contigEnd){
+        return contigEnd;
+      }
+    }
+    return endOfContig;
+  }
+
+
+  private ArrayList<RepeatInterval>[] getRawIntervals(String[] assemblies, int[][] contigEnds, Reference[] selectedRefs, int[] readNums) throws InterruptedException, JDOMException, IOException{
+    ArrayList<RepeatInterval>[] intervals = new ArrayList[assemblies.length];
     for(int i = 0; i < intervals.length; i++){
       intervals[i] = new ArrayList<>();
     }
     for(int i = 0; i < assemblies.length; i++){
       String seq_i = assemblies[i];
+      int[] contigEnds_i = contigEnds[i];
       Reference ref_i = selectedRefs[i];
       for(int j = i + 1; j < selectedRefs.length; j++){
         Reference ref_j = selectedRefs[j];
-        ArrayList<HSP> similarFragments = getSimilarFragments(ref_i.name, seq_i, ref_j.name);
+        ArrayList<HSP> similarFragments = getSimilarFragments(seq_i, contigEnds_i, ref_i.name,
+            ref_j.name, contigEnds[j]);
         for(HSP interval: similarFragments){
           int refID = chooseRef(interval, seq_i, ref_i, ref_j, readNums[i], readNums[j]);
           switch(refID){
             case 1:
-              intervals[j].add(new SendToInterval(interval.startS, interval.endS, i));
+              intervals[j].add(new RepeatInterval(interval.startS, interval.endS, i, interval.startQ, interval.endQ));
               break;
             case 2:
-              intervals[i].add(new SendToInterval(interval.startQ, interval.endQ, j));
+              intervals[i].add(new RepeatInterval(interval.startQ, interval.endQ, j, interval.startS, interval.endS));
               break;
           }
         }
       }
     }
-    ArrayList<SendToInterval>[] res = new ArrayList[intervals.length];
+    return intervals;
+  }
+
+  private ArrayList<RepeatInterval>[] filterIntervals(ArrayList<RepeatInterval>[] intervals, int[] readNums){
+    ArrayList<RepeatInterval>[] res = new ArrayList[intervals.length];
     for(int j = 0; j < intervals.length; j++){
-      ArrayList<SendToInterval> list = intervals[j];
+      ArrayList<RepeatInterval> list = intervals[j];
       if(list.isEmpty()){
         res[j] = list;
         continue;
       }
-      TreeSet<SendToInterval> sortedSet = new TreeSet<>(list);
-      ArrayList<SendToInterval> fIntervals = new ArrayList<>();
-      SendToInterval pivot = sortedSet.pollFirst();
+      TreeSet<RepeatInterval> sortedSet = new TreeSet<>(list);
+      ArrayList<RepeatInterval> fIntervals = new ArrayList<>();
+      RepeatInterval pivot = sortedSet.pollFirst();
       while(!sortedSet.isEmpty()){
-        SendToInterval curr = sortedSet.pollFirst();
+        RepeatInterval curr = sortedSet.pollFirst();
         if(pivot.end > curr.start){
           // intersection
           if(pivot.assemblyID == curr.assemblyID){
@@ -327,21 +333,30 @@ class Postprocessor extends Constants{
               pivot.end = curr.end;
             }
           }else{
-            if(pivot.end - pivot.start >= curr.end - curr.start){
-              // cut or merge curr to pivot
-              if(curr.end > pivot.end){
-                curr.start = pivot.end;
-                if(curr.end - curr.start >= minLen){
-                  sortedSet.add(curr);
-                }
+            if(pivot.end == curr.end && pivot.start == curr.start){
+              // this is the same fragment similar to multiple assemblies
+              if(readNums[pivot.assemblyID] < readNums[curr.assemblyID]){
+                pivot = curr;
               }
             }else{
-              // cut or merge pivot to curr
-              pivot.end = curr.start;
-              if(pivot.end - pivot.start >= minLen){
+              if(pivot.end - pivot.start >= curr.end - curr.start){
+                // cut or merge curr to pivot
+                if(curr.end > pivot.end){
+                  curr.start = pivot.end;
+                  //if(curr.end - curr.start >= minLen){
+                  //this fragment should be cut anyway
+                  sortedSet.add(curr);
+                  //}
+                }
+              }else{
+                // cut or merge pivot to curr
+                pivot.end = curr.start;
+                //if(pivot.end - pivot.start >= minLen){
+                //this fragment should be cut anyway
                 fIntervals.add(pivot);
+                //}
+                pivot = curr;
               }
-              pivot = curr;
             }
           }
         }else{
@@ -352,9 +367,159 @@ class Postprocessor extends Constants{
       fIntervals.add(pivot);
       res[j] = fIntervals;
     }
-    ///if(!debug){
-      deleteBlastDB(selectedRefs);
-    //}
+    return res;
+  }
+
+  private void setDest(int assemblyID, int num, RepeatInterval[][] intervalsArr, ArrayList<RepeatInterval>[] res){
+    RepeatInterval interval = intervalsArr[assemblyID][num];
+    RepeatInterval[] destList = intervalsArr[interval.assemblyID];
+    RepeatInterval temp = new RepeatInterval(interval.startDest, interval.endDest, 0, 0, 0);
+    int i = Arrays.binarySearch(destList, temp);
+    if(i >= 0){
+      //found interval starting from the same coordinate
+      RepeatInterval dest = destList[i];
+      res[assemblyID].add(interval);
+      if(dest.end < interval.endDest){
+        RepeatInterval right = new RepeatInterval(interval.start + dest.end - dest.start,
+            interval.end, interval.assemblyID, dest.end, interval.endDest);
+        res[assemblyID].add(right);
+        interval.end = right.start;
+        interval.endDest = right.startDest;
+      }
+      interval.assemblyID = dest.assemblyID;
+    }else{
+      int insertPos = -i - 1;
+      if(insertPos == destList.length){
+        // might be intersection with prev
+        if(destList.length > 0){
+          RepeatInterval prev = destList[destList.length - 1];
+          res[assemblyID].add(interval);
+          if(interval.startDest < prev.end){
+            // intersects with prev
+            if(interval.endDest > prev.end){
+              // longer than prev
+              RepeatInterval right = new RepeatInterval(interval.start + prev.end - interval.startDest,
+                  interval.end, interval.assemblyID, prev.end, interval.endDest);
+              res[assemblyID].add(right);
+              interval.end = right.start;
+              interval.endDest = right.startDest;
+            }
+            interval.assemblyID = prev.assemblyID;
+          }
+        }
+      }else{
+        if(insertPos == 0){
+          // might be intersection with next
+          RepeatInterval next = destList[insertPos];
+          if(interval.endDest > next.end){
+            RepeatInterval left = new RepeatInterval(interval.start,
+                interval.end + next.start - interval.endDest, interval.assemblyID,
+                interval.startDest, next.start);
+            res[assemblyID].add(left);
+            interval.startDest = left.endDest;
+            interval.start = left.end;
+            res[assemblyID].add(interval);
+            RepeatInterval right = new RepeatInterval(interval.end - interval.endDest + next.end,
+                interval.end, interval.assemblyID, next.end, interval.endDest);
+            res[assemblyID].add(right);
+            interval.end = right.start;
+            interval.endDest = right.startDest;
+            interval.assemblyID = next.assemblyID;
+          }else{
+            if(interval.endDest > next.start){
+              RepeatInterval left = new RepeatInterval(interval.start,
+                  interval.end + next.start - interval.endDest, interval.assemblyID,
+                  interval.startDest, next.start);
+              res[assemblyID].add(left);
+              interval.startDest = left.endDest;
+              interval.start = left.end;
+              interval.assemblyID = next.assemblyID;
+            }
+            res[assemblyID].add(interval);
+          }
+        }else{
+          // might be intersection with both prev and next
+          RepeatInterval prev = destList[insertPos - 1];
+          if(interval.startDest < prev.end){
+            // intersects with prev
+            if(interval.endDest > prev.end){
+              // longer than prev
+              RepeatInterval left = new RepeatInterval(interval.start,
+                  interval.end - interval.endDest + prev.end, prev.assemblyID,
+                  interval.startDest, prev.end);
+              res[assemblyID].add(left);
+              interval.start = left.end;
+              interval.startDest = left.endDest;
+            }else{
+              // inside the prev
+              interval.assemblyID = prev.assemblyID;
+              return;
+            }
+          }
+          res[assemblyID].add(interval);
+          RepeatInterval next = destList[insertPos];
+          if(interval.endDest > next.start){
+            //intersects next
+            RepeatInterval right = new RepeatInterval(interval.end - interval.endDest + next.start,
+                interval.end, next.assemblyID, next.start, interval.endDest);
+            res[assemblyID].add(right);
+            interval.end = right.start;
+            interval.endDest = right.startDest;
+          }
+        }
+      }
+    }
+  }
+
+  private ArrayList<RepeatInterval>[] updateIntervals(ArrayList<RepeatInterval>[] intervals){
+    ArrayList<RepeatInterval>[] res = null;
+    outer:
+    while(true){
+      res = new ArrayList[intervals.length];
+      RepeatInterval[][] intervalsArr = new RepeatInterval[intervals.length][];
+      for(int i = 0; i < intervals.length; i++){
+        res[i] = new ArrayList<>();
+        intervalsArr[i] = intervals[i].toArray(new RepeatInterval[intervals[i].size()]);
+      }
+      for(int i = 0; i < intervals.length; i++){
+        for(int j = 0; j < intervalsArr[i].length; j++){
+          setDest(i, j, intervalsArr, res);
+        }
+      }
+      for(int i = 0; i < intervals.length; i++){
+        if(intervals[i].size() != res[i].size()){
+          intervals = res;
+          continue outer;
+        }
+      }
+      for(int i = 0; i < intervals.length; i++){
+        if(!intervals[i].equals(res[i])){
+          intervals = res;
+          continue outer;
+        }
+      }
+      break;
+    }
+    return res;
+  }
+
+  ArrayList<RepeatInterval>[] findRegionsToCut(String[] assemblies, int[][] contigEnds, Reference[] selectedRefs, int[] readNums) throws IOException, InterruptedException, JDOMException{
+    makeBlastDB(assemblies, selectedRefs);
+    ArrayList<RepeatInterval>[] intervals = getRawIntervals(assemblies, contigEnds, selectedRefs, readNums);
+    ArrayList<RepeatInterval>[] res = filterIntervals(intervals, readNums);
+    updateIntervals(res);
+    deleteBlastDB(selectedRefs);
+    if(debug){
+      BufferedWriter writer = new BufferedWriter(new FileWriter(outPath + "intervals.txt"));
+      for(int i = 0; i < res.length; i++){
+        writer.write(selectedRefs[i].name + "\n");
+        for(RepeatInterval interval: res[i]){
+          writer.write(Integer.toString(interval.start) + " " +
+              Integer.toString(interval.end) + " " + selectedRefs[interval.assemblyID].name + "\n");
+        }
+      }
+      writer.close();
+    }
     return res;
   }
 

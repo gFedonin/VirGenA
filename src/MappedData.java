@@ -13,6 +13,7 @@ class MappedData {
     ArrayList<PairedRead> unmapped;
 
     int[] pairs;
+    byte[] isConcordant;
     ArrayList<PairedRead> needToRemap;
 
     MappedData(){

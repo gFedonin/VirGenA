@@ -204,21 +204,25 @@ class BamPrinter extends Constants{
       int j = 0;
       int refID = 0;
       while(genome.fragmentEnds[j] == 0){
-        SAMSequenceRecord samSequenceRecord =
-            new SAMSequenceRecord(genome.fragmentNames[j].replace(' ', '_'), 0);
-        header.addSequence(samSequenceRecord);
-        refID ++;
+//        SAMSequenceRecord samSequenceRecord =
+//            new SAMSequenceRecord(genome.fragmentNames[j], 0);
+//        header.addSequence(samSequenceRecord);
+//        refID ++;
         j ++;
       }
-      for(int i = 0, k = 1, prev = 0; i < genome.contigEnds.length; i++, k++){
+      for(int i = 0, k = 1, prev = 0; i < genome.contigEnds.length; i++){
         int end = genome.contigEnds[i];
+        if(end == prev){
+          continue;
+        }
         SAMSequenceRecord samSequenceRecord;
         if(end == genome.fragmentEnds[j] && k == 1){
           samSequenceRecord =
-              new SAMSequenceRecord(genome.fragmentNames[j].replace(' ', '_'), end - prev);
+              new SAMSequenceRecord(genome.fragmentNames[j], end - prev);
         }else{
           samSequenceRecord =
-              new SAMSequenceRecord(genome.fragmentNames[j].replace(' ', '_') + "_" + Integer.toString(k), end - prev);
+              new SAMSequenceRecord(genome.fragmentNames[j] + "_" + Integer.toString(k), end - prev);
+          k++;
         }
         prev = end;
         header.addSequence(samSequenceRecord);
@@ -226,24 +230,22 @@ class BamPrinter extends Constants{
         refID ++;
         if(end == genome.fragmentEnds[j]){
           j++;
-          k = 0;
+          k = 1;
           while(j < genome.fragmentEnds.length - 1 && end == genome.fragmentEnds[j]){
-            samSequenceRecord =
-                new SAMSequenceRecord(genome.fragmentNames[j].replace(' ', '_'), 0);
-            header.addSequence(samSequenceRecord);
-            refID ++;
+//            samSequenceRecord =
+//                new SAMSequenceRecord(genome.fragmentNames[j].replace(' ', '_'), 0);
+//            header.addSequence(samSequenceRecord);
+//            refID ++;
             j ++;
           }
         }
       }
     }else{
       if(genome.contigEnds.length == 1){
-        SAMSequenceRecord samSequenceRecord = new SAMSequenceRecord(
-            genome.name, genome.length);
+        SAMSequenceRecord samSequenceRecord = new SAMSequenceRecord(genome.name, genome.length);
         header.addSequence(samSequenceRecord);
       }else{
-        int prevCoord = 0;
-        for(int i = 0; i < genome.contigEnds.length; i++){
+        for(int i = 0, prevCoord = 0; i < genome.contigEnds.length; i++){
           SAMSequenceRecord samSequenceRecord = new SAMSequenceRecord(
               genome.name + "_" + Integer.toString(i + 1), genome.contigEnds[i] - prevCoord);
           header.addSequence(samSequenceRecord);

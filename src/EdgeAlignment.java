@@ -13,7 +13,7 @@ class EdgeAlignment extends Constants{
   int leftAlnLen;
   int rightAlnLen;
 
-  EdgeAlignment(Alignment aln, int readStart, Interval gap){
+  EdgeAlignment(Alignment aln, int readStart, ProblemInterval gap){
     int junction = gap.junction;
     byte[] concatSeq = gap.concat;
     start1 = aln.start1;

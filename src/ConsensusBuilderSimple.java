@@ -41,11 +41,13 @@ class ConsensusBuilderSimple extends ConsensusBuilder{
     public int from;
     public int to;
     public int genomeLen;
+    //private boolean concordantOnly;
 
-    public ReadCounting(int from, int to, int genomeLen){
+    public ReadCounting(int from, int to, int genomeLen){//, boolean concordantOnly
         this.from = from;
         this.to = to;
         this.genomeLen = genomeLen;
+        //this.concordantOnly = concordantOnly;
     }
 
     @Override
@@ -54,6 +56,9 @@ class ConsensusBuilderSimple extends ConsensusBuilder{
       Iterator<MappedRead> iter = mappedData.mappedReads.listIterator(from);
       for(int n = from; n < to; n++){
         MappedRead read = iter.next();
+//        if(mappedData.isConcordant[n] == 0){
+//          continue;
+//        }
         Alignment alignment = read.aln;
         byte[] seq1 = alignment.sequence1;
         int j = read.start + alignment.start2;
@@ -112,7 +117,7 @@ class ConsensusBuilderSimple extends ConsensusBuilder{
     }
   }
 
-  byte[] getConsensusSimple(boolean saveUncovered, int coverageThreshold, byte[] genome) throws InterruptedException{
+  byte[] getConsensusSimple(boolean saveUncovered, int coverageThreshold, byte[] genome) throws InterruptedException{//boolean concordantOnly,
     ReadCounting[] tasks = new ReadCounting[threadNum];
     ExecutorService executor = Executors.newFixedThreadPool(threadNum);
     int size = mappedData.mappedReads.size()/threadNum;

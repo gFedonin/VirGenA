@@ -1,3 +1,4 @@
+import gnu.trove.list.array.TByteArrayList;
 import gnu.trove.list.array.TIntArrayList;
 import org.jdom2.Document;
 import org.jdom2.JDOMException;
@@ -14,7 +15,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 
 /**
- * With postprocessing
+ * Created by Gennady on 19.05.2017.
  */
 public class RefBasedAssembler extends Constants{
 
@@ -62,43 +63,13 @@ public class RefBasedAssembler extends Constants{
     BamPrinter bamPrinter = new BamPrinter();
     String bamPath = outPath + ref.name + "_mapped_reads.bam";
     bamPrinter.printBAM(consensusBuilder.mappedData, genome, bamPath);
+    if(refFinder.debug && ref.problemReads.size() != 0){
+      MappedData garbage = consensusBuilder.mapper.mapReads(ref.problemReads, genome);
+      bamPath = outPath + ref.name + "_garbage.bam";
+      bamPrinter.printBAM(garbage, genome, bamPath);
+    }
   }
 
-  private int[][] chooseIntervalsToMove(Interval[][] problemIntervals,
-                                        ArrayList<Postprocessor.SendToInterval>[] intervals,
-                                        int[][] coordConvert, String[] assemblies){
-    int[][] problemIntervalsToMove = new int[intervals.length][];
-    for(int i = 0; i < intervals.length; i++){
-      int[] coordConv = coordConvert[i];
-      problemIntervalsToMove[i] = new int[problemIntervals[i].length];
-      outer:
-      for(int j = 0; j < problemIntervals[i].length; j++){
-        Interval interval = problemIntervals[i][j];
-        int start;
-        if(interval.start == 0){
-          start = 0;
-        }else{
-          start = coordConv[interval.start - 1];
-        }
-        int end;
-        if(interval.end == coordConv.length){
-          end = assemblies[i].length();
-        }else{
-          end = coordConv[interval.end];
-        }
-        for(Postprocessor.SendToInterval sendToInterval: intervals[i]){
-          if(start < sendToInterval.end && end > sendToInterval.start){
-            problemIntervalsToMove[i][j] = sendToInterval.assemblyID;
-//            System.out.printf("%d: %d - %d to %d\n", i, interval.start, interval.end,
-//                sendToInterval.assemblyID);
-            continue outer;
-          }
-        }
-        problemIntervalsToMove[i][j] = -1;
-      }
-    }
-    return problemIntervalsToMove;
-  }
 
   private void adjustCoord(MappedRead mappedRead, int[] coordConvert){
     mappedRead.end = coordConvert[mappedRead.start + mappedRead.aln.end2 - 1] + 1;
@@ -107,283 +78,160 @@ public class RefBasedAssembler extends Constants{
     mappedRead.aln.start2 = 0;
   }
 
-  private void resortConcordant(ArrayList<PairedRead> reads, Interval[] problemIntervals,
-                                   int[] problemIntervalsToMove, int[] coordConv,
-                                   MappedData mappedData_AfterCuts_i,
-                                   ArrayList<Postprocessor.SendToInterval> sendToIntervals,
+  private int computeIntersectionLen(int start, int end, RepeatInterval repeatInterval){
+    int intersectionLen = 0;
+    if(start < repeatInterval.start){
+      if(end < repeatInterval.end){
+        intersectionLen = end - repeatInterval.start;
+      }else{
+        intersectionLen = repeatInterval.end - repeatInterval.start;
+      }
+    }else{
+      if(end < repeatInterval.end){
+        intersectionLen = end - start;
+      }else{
+        intersectionLen = repeatInterval.end - start;
+      }
+    }
+    return intersectionLen;
+  }
+
+  private void resortConcordant(ArrayList<PairedRead> reads,
+                                MappedData mappedData_AfterCuts_i,
+                                ArrayList<RepeatInterval> repeatIntervals,
                                 HashSet<String>[] mapped,
                                 HashMap<String, PairedRead>[] needToRemap, int i){
     outer:
     for(PairedRead pairedRead: reads){
-      // check if read is in problem interval
-      boolean firstInProblemInterval = false;
-      boolean secondInProblemInterval = false;
-      for(int j = 0; j < problemIntervals.length; j++){
-        Interval problemInterval = problemIntervals[j];
-        if(pairedRead.r1.start + pairedRead.r1.aln.start2 < problemInterval.end &&
-            pairedRead.r1.start + pairedRead.r1.aln.end2 > problemInterval.start){
-          // it is
-          int moveToID = problemIntervalsToMove[j];
-          if(moveToID != -1){
-            // if we need to move this interval to another assembly
-            if(!mapped[moveToID].contains(pairedRead.name)){
-              needToRemap[moveToID].put(pairedRead.name, pairedRead);
-            }
-            //MappedData mappedData1 = mappedDataAfterCuts[moveToID];
-            //mappedData1.needToRemap.add(pairedRead);
-            continue outer;
-          }else{
-            // we need to remap this read to current assembly
-            firstInProblemInterval = true;
-            //mappedData_AfterCuts_i.needToRemap.add(pairedRead);
-          }
-        }
-        if(pairedRead.r2.start + pairedRead.r2.aln.start2 < problemInterval.end &&
-            pairedRead.r2.start + pairedRead.r2.aln.end2 > problemInterval.start){
-          // it is
-          int moveToID = problemIntervalsToMove[j];
-          if(moveToID != -1){
-            // if we need to move this interval to another assembly
-            if(!mapped[moveToID].contains(pairedRead.name)){
-              needToRemap[moveToID].put(pairedRead.name, pairedRead);
-            }
-            //MappedData mappedData1 = mappedDataAfterCuts[moveToID];
-            //mappedData1.needToRemap.add(pairedRead);
-            continue outer;
-          }else{
-            // we need to remap this read to current assembly
-            secondInProblemInterval = true;
-            //mappedData_AfterCuts_i.needToRemap.add(pairedRead);
-          }
-
-        }
-      }
-      // this read pair is not in problem interval -> compute it's new coord on curr assembly
-      int start = coordConv[pairedRead.r1.start + pairedRead.r1.aln.start2];
-      int end = coordConv[pairedRead.r1.start + pairedRead.r1.aln.end2 - 1] + 1;
+      // compute new coord on curr assembly
+      int start = pairedRead.r1.start + pairedRead.r1.aln.start2;
+      int end = pairedRead.r1.start + pairedRead.r1.aln.end2;
       // check if this read should be moved to new assembly
-      for(Postprocessor.SendToInterval sendToInterval: sendToIntervals){
-        if(start < sendToInterval.end && end > sendToInterval.start){
-//            MappedData mappedDataTo = mappedDataAfterCuts[sendToInterval.assemblyID];
-//            mappedDataTo.needToRemap.add(pairedRead);
-          if(!mapped[sendToInterval.assemblyID].contains(pairedRead.name)){
-            needToRemap[sendToInterval.assemblyID].put(pairedRead.name, pairedRead);
+      for(RepeatInterval repeatInterval : repeatIntervals){
+        if(start < repeatInterval.end && end > repeatInterval.start){
+          if(!mapped[repeatInterval.assemblyID].contains(pairedRead.name) &&
+              computeIntersectionLen(start, end, repeatInterval) > 0.5*pairedRead.r1.aln.length){
+            needToRemap[repeatInterval.assemblyID].put(pairedRead.name, pairedRead);
+          }else{
+            needToRemap[i].put(pairedRead.name, pairedRead);
           }
           continue outer;
         }
       }
-      start = coordConv[pairedRead.r2.start + pairedRead.r2.aln.start2];
-      end = coordConv[pairedRead.r2.start + pairedRead.r2.aln.end2 - 1] + 1;
+      start = pairedRead.r2.start + pairedRead.r2.aln.start2;
+      end = pairedRead.r2.start + pairedRead.r2.aln.end2;
       // check if this read should be moved to new assembly
-      for(Postprocessor.SendToInterval sendToInterval: sendToIntervals){
-        if(start < sendToInterval.end && end > sendToInterval.start){
-//            MappedData mappedDataTo = mappedDataAfterCuts[sendToInterval.assemblyID];
-//            mappedDataTo.needToRemap.add(pairedRead);
-          if(!mapped[sendToInterval.assemblyID].contains(pairedRead.name)){
-            needToRemap[sendToInterval.assemblyID].put(pairedRead.name, pairedRead);
+      for(RepeatInterval repeatInterval : repeatIntervals){
+        if(start < repeatInterval.end && end > repeatInterval.start){
+          if(!mapped[repeatInterval.assemblyID].contains(pairedRead.name) &&
+              computeIntersectionLen(start, end, repeatInterval) > 0.5*pairedRead.r2.aln.length){
+            needToRemap[repeatInterval.assemblyID].put(pairedRead.name, pairedRead);
+          }else{
+            needToRemap[i].put(pairedRead.name, pairedRead);
           }
           continue outer;
         }
       }
-      if(firstInProblemInterval || secondInProblemInterval){
-        needToRemap[i].put(pairedRead.name, pairedRead);
-      }else{
-        // this read stay here and not remapped
-        adjustCoord(pairedRead.r1, coordConv);
-        adjustCoord(pairedRead.r2, coordConv);
-        mappedData_AfterCuts_i.concordant.add(pairedRead);
-        mappedData_AfterCuts_i.mappedReads.add(pairedRead.r1);
-        mappedData_AfterCuts_i.mappedReads.add(pairedRead.r2);
-        mapped[i].add(pairedRead.name);
-        needToRemap[i].remove(pairedRead.name);
-      }
+      // this read stay here and not remapped
+      mappedData_AfterCuts_i.concordant.add(pairedRead);
+      mappedData_AfterCuts_i.mappedReads.add(pairedRead.r1);
+      mappedData_AfterCuts_i.mappedReads.add(pairedRead.r2);
     }
   }
 
-  private void resortDiscordant(ArrayList<PairedRead> reads, Interval[] problemIntervals,
-                                int[] problemIntervalsToMove, int[] coordConv,
-                                ArrayList<Postprocessor.SendToInterval> sendToIntervals,
+  private void resortDiscordant(ArrayList<PairedRead> reads,
+                                ArrayList<RepeatInterval> repeatIntervals,
                                 HashSet<String>[] mapped,
                                 HashMap<String, PairedRead>[] needToRemap, int i){
     outer:
     for(PairedRead pairedRead: reads){
-      // check if read is in problem interval
-      for(int j = 0; j < problemIntervals.length; j++){
-        Interval problemInterval = problemIntervals[j];
-        if(pairedRead.r1.start + pairedRead.r1.aln.start2 < problemInterval.end &&
-            pairedRead.r1.start + pairedRead.r1.aln.end2 > problemInterval.start){
-          // it is
-          int moveToID = problemIntervalsToMove[j];
-          if(moveToID != -1){
-            // if we need to move this interval to another assembly
-//              MappedData mappedData1 = mappedDataAfterCuts[moveToID];
-//              mappedData1.needToRemap.add(pairedRead);
-            if(!mapped[moveToID].contains(pairedRead.name)){
-              needToRemap[moveToID].put(pairedRead.name, pairedRead);
-            }
-            continue outer;
-          }else{
-            // we need to remap this read to current assembly
-            //mappedData_AfterCuts_i.needToRemap.add(pairedRead);
-          }
-        }
-        if(pairedRead.r2.start + pairedRead.r2.aln.start2 < problemInterval.end &&
-            pairedRead.r2.start + pairedRead.r2.aln.end2 > problemInterval.start){
-          // it is
-          int moveToID = problemIntervalsToMove[j];
-          if(moveToID != -1){
-            // if we need to move this interval to another assembly
-//              MappedData mappedData1 = mappedDataAfterCuts[moveToID];
-//              mappedData1.needToRemap.add(pairedRead);
-            if(!mapped[moveToID].contains(pairedRead.name)){
-              needToRemap[moveToID].put(pairedRead.name, pairedRead);
-            }
-            continue outer;
-          }else{
-            // we need to remap this read to current assembly
-            //mappedData_AfterCuts_i.needToRemap.add(pairedRead);
-          }
-        }
-      }
       // this read pair is no in problem interval -> compute it's new coord on curr assembly
-      int start = coordConv[pairedRead.r1.start + pairedRead.r1.aln.start2];
-      int end = coordConv[pairedRead.r1.start + pairedRead.r1.aln.end2 - 1] + 1;
+      int start = pairedRead.r1.start + pairedRead.r1.aln.start2;
+      int end = pairedRead.r1.start + pairedRead.r1.aln.end2;
       // check if this read should be moved to new assembly
-      for(Postprocessor.SendToInterval sendToInterval: sendToIntervals){
-        if(start < sendToInterval.end && end > sendToInterval.start){
-//            MappedData mappedDataTo = mappedDataAfterCuts[sendToInterval.assemblyID];
-//            mappedDataTo.needToRemap.add(pairedRead);
-          if(!mapped[sendToInterval.assemblyID].contains(pairedRead.name)){
-            needToRemap[sendToInterval.assemblyID].put(pairedRead.name, pairedRead);
+      for(RepeatInterval repeatInterval : repeatIntervals){
+        if(start < repeatInterval.end && end > repeatInterval.start){
+          if(!mapped[repeatInterval.assemblyID].contains(pairedRead.name) &&
+              computeIntersectionLen(start, end, repeatInterval) > 0.5*pairedRead.r1.aln.length){
+            needToRemap[repeatInterval.assemblyID].put(pairedRead.name, pairedRead);
+          }else{
+            needToRemap[i].put(pairedRead.name, pairedRead);
           }
           continue outer;
         }
       }
-      start = coordConv[pairedRead.r2.start + pairedRead.r2.aln.start2];
-      end = coordConv[pairedRead.r2.start + pairedRead.r2.aln.end2 - 1] + 1;
+      start = pairedRead.r2.start + pairedRead.r2.aln.start2;
+      end = pairedRead.r2.start + pairedRead.r2.aln.end2;
       // check if this read should be moved to new assembly
-      for(Postprocessor.SendToInterval sendToInterval: sendToIntervals){
-        if(start < sendToInterval.end && end > sendToInterval.start){
-//            MappedData mappedDataTo = mappedDataAfterCuts[sendToInterval.assemblyID];
-//            mappedDataTo.needToRemap.add(pairedRead);
-          if(!mapped[sendToInterval.assemblyID].contains(pairedRead.name)){
-            needToRemap[sendToInterval.assemblyID].put(pairedRead.name, pairedRead);
+      for(RepeatInterval repeatInterval : repeatIntervals){
+        if(start < repeatInterval.end && end > repeatInterval.start){
+          if(!mapped[repeatInterval.assemblyID].contains(pairedRead.name) &&
+              computeIntersectionLen(start, end, repeatInterval) > 0.5*pairedRead.r2.aln.length){
+            needToRemap[repeatInterval.assemblyID].put(pairedRead.name, pairedRead);
+          }else{
+            needToRemap[i].put(pairedRead.name, pairedRead);
           }
           continue outer;
         }
       }
       // we remap it anyway
-      //mappedData_AfterCuts_i.needToRemap.add(pairedRead);
       needToRemap[i].put(pairedRead.name, pairedRead);
     }
   }
 
-  private void resortLeft(ArrayList<PairedRead> reads, Interval[] problemIntervals,
-                                int[] problemIntervalsToMove, int[] coordConv,
-                                MappedData mappedData_AfterCuts_i,
-                                ArrayList<Postprocessor.SendToInterval> sendToIntervals,
-                                HashSet<String>[] mapped,
-                                HashMap<String, PairedRead>[] needToRemap, int i){
+  private void resortLeft(ArrayList<PairedRead> reads,
+                          MappedData mappedData_AfterCuts_i,
+                          ArrayList<RepeatInterval> repeatIntervals,
+                          HashSet<String>[] mapped,
+                          HashMap<String, PairedRead>[] needToRemap, int i){
     outer:
     for(PairedRead pairedRead: reads){
-      // check if read is in problem interval
-      boolean firstInProblemInterval = false;
-      for(int j = 0; j < problemIntervals.length; j++){
-        Interval problemInterval = problemIntervals[j];
-        if(pairedRead.r1.start + pairedRead.r1.aln.start2 < problemInterval.end &&
-            pairedRead.r1.start + pairedRead.r1.aln.end2 > problemInterval.start){
-          // it is
-          int moveToID = problemIntervalsToMove[j];
-          if(moveToID != -1){
-            // if we need to move this interval to another assembly
-//              MappedData mappedData1 = mappedDataAfterCuts[moveToID];
-//              mappedData1.needToRemap.add(pairedRead);
-            if(!mapped[moveToID].contains(pairedRead.name)){
-              needToRemap[moveToID].put(pairedRead.name, pairedRead);
-            }
-            continue outer;
-          }else{
-            // we need to remap this read to current assembly
-            firstInProblemInterval = true;
-            //mappedData_AfterCuts_i.needToRemap.add(pairedRead);
-          }
-        }
-      }
       // this read pair is no in problem interval -> compute it's new coord on curr assembly
-      int start = coordConv[pairedRead.r1.start + pairedRead.r1.aln.start2];
-      int end = coordConv[pairedRead.r1.start + pairedRead.r1.aln.end2 - 1] + 1;
+      int start = pairedRead.r1.start + pairedRead.r1.aln.start2;
+      int end = pairedRead.r1.start + pairedRead.r1.aln.end2;
       // check if this read should be moved to new assembly
-      for(Postprocessor.SendToInterval sendToInterval: sendToIntervals){
-        if(start < sendToInterval.end && end > sendToInterval.start){
-//            MappedData mappedDataTo = mappedDataAfterCuts[sendToInterval.assemblyID];
-//            mappedDataTo.needToRemap.add(pairedRead);
-          if(!mapped[sendToInterval.assemblyID].contains(pairedRead.name)){
-            needToRemap[sendToInterval.assemblyID].put(pairedRead.name, pairedRead);
+      for(RepeatInterval repeatInterval : repeatIntervals){
+        if(start < repeatInterval.end && end > repeatInterval.start){
+          if(!mapped[repeatInterval.assemblyID].contains(pairedRead.name) &&
+              computeIntersectionLen(start, end, repeatInterval) > 0.5*pairedRead.r1.aln.length){
+            needToRemap[repeatInterval.assemblyID].put(pairedRead.name, pairedRead);
+          }else{
+            needToRemap[i].put(pairedRead.name, pairedRead);
           }
           continue outer;
         }
       }
       if(!Arrays.equals(pairedRead.seq2, NULL_SEQ)){
         // pair is present -> remap
-        //mappedData_AfterCuts_i.needToRemap.add(pairedRead);
         needToRemap[i].put(pairedRead.name, pairedRead);
       }else{
         // one read from pair present
-        if(firstInProblemInterval){
-          //mappedData_AfterCuts_i.needToRemap.add(pairedRead);
-          needToRemap[i].put(pairedRead.name, pairedRead);
-        }else{
-          mappedData_AfterCuts_i.leftMateMapped.add(pairedRead);
-          mappedData_AfterCuts_i.mappedReads.add(pairedRead.r1);
-          adjustCoord(pairedRead.r1, coordConv);
-          mapped[i].add(pairedRead.name);
-          needToRemap[i].remove(pairedRead.name);
-        }
+        mappedData_AfterCuts_i.leftMateMapped.add(pairedRead);
+        mappedData_AfterCuts_i.mappedReads.add(pairedRead.r1);
       }
     }
   }
 
-  private void resortRight(ArrayList<PairedRead> reads, Interval[] problemIntervals,
-                          int[] problemIntervalsToMove, int[] coordConv,
-                          MappedData mappedData_AfterCuts_i,
-                          ArrayList<Postprocessor.SendToInterval> sendToIntervals,
-                          HashSet<String>[] mapped,
-                          HashMap<String, PairedRead>[] needToRemap, int i){
+  private void resortRight(ArrayList<PairedRead> reads,
+                           MappedData mappedData_AfterCuts_i,
+                           ArrayList<RepeatInterval> repeatIntervals,
+                           HashSet<String>[] mapped,
+                           HashMap<String, PairedRead>[] needToRemap, int i){
     outer:
     for(PairedRead pairedRead: reads){
-      boolean secondInProblemInterval = false;
-      // check if read is in problem interval
-      for(int j = 0; j < problemIntervals.length; j++){
-        Interval problemInterval = problemIntervals[j];
-        if(pairedRead.r2.start + pairedRead.r2.aln.start2 < problemInterval.end &&
-            pairedRead.r2.start + pairedRead.r2.aln.end2 > problemInterval.start){
-          // it is
-          int moveToID = problemIntervalsToMove[j];
-          if(moveToID != -1){
-            // if we need to move this interval to another assembly
-//              MappedData mappedData1 = mappedDataAfterCuts[moveToID];
-//              mappedData1.needToRemap.add(pairedRead);
-            if(!mapped[moveToID].contains(pairedRead.name)){
-              needToRemap[moveToID].put(pairedRead.name, pairedRead);
-            }
-            continue outer;
-          }else{
-            // we need to remap this read to current assembly
-            secondInProblemInterval = true;
-            //mappedData_AfterCuts_i.needToRemap.add(pairedRead);
-          }
-        }
-      }
       // this read pair is no in problem interval -> compute it's new coord on curr assembly
-      int start = coordConv[pairedRead.r2.start + pairedRead.r2.aln.start2];
-      int end = coordConv[pairedRead.r2.start + pairedRead.r2.aln.end2 - 1] + 1;
+      int start = pairedRead.r2.start + pairedRead.r2.aln.start2;
+      int end = pairedRead.r2.start + pairedRead.r2.aln.end2;
       // check if this read should be moved to new assembly
-      for(Postprocessor.SendToInterval sendToInterval: sendToIntervals){
-        if(start < sendToInterval.end && end > sendToInterval.start){
-//            MappedData mappedDataTo = mappedDataAfterCuts[sendToInterval.assemblyID];
+      for(RepeatInterval repeatInterval : repeatIntervals){
+        if(start < repeatInterval.end && end > repeatInterval.start){
+//            MappedData mappedDataTo = mappedDataAfterCuts[repeatInterval.assemblyID];
 //            mappedDataTo.needToRemap.add(pairedRead);
-          if(!mapped[sendToInterval.assemblyID].contains(pairedRead.name)){
-            needToRemap[sendToInterval.assemblyID].put(pairedRead.name, pairedRead);
+          if(!mapped[repeatInterval.assemblyID].contains(pairedRead.name) &&
+              computeIntersectionLen(start, end, repeatInterval) > 0.5*pairedRead.r2.aln.length){
+            needToRemap[repeatInterval.assemblyID].put(pairedRead.name, pairedRead);
+          }else{
+            needToRemap[i].put(pairedRead.name, pairedRead);
           }
           continue outer;
         }
@@ -394,45 +242,38 @@ public class RefBasedAssembler extends Constants{
         needToRemap[i].put(pairedRead.name, pairedRead);
       }else{
         // one read from pair present
-        if(secondInProblemInterval){
-          //mappedData_AfterCuts_i.needToRemap.add(pairedRead);
-          needToRemap[i].put(pairedRead.name, pairedRead);
-        }else{
-          mappedData_AfterCuts_i.rightMateMapped.add(pairedRead);
-          mappedData_AfterCuts_i.mappedReads.add(pairedRead.r2);
-          adjustCoord(pairedRead.r2, coordConv);
-          mapped[i].add(pairedRead.name);
-          needToRemap[i].remove(pairedRead.name);
-        }
+        mappedData_AfterCuts_i.rightMateMapped.add(pairedRead);
+        mappedData_AfterCuts_i.mappedReads.add(pairedRead.r2);
       }
     }
   }
 
-  private MappedData[] resortReads(Interval[][] problemIntervals,
-                                  ArrayList<Postprocessor.SendToInterval>[] intervals,
-                                  MappedData[] mappedData, int[][] coordConvert,
-                                  int[][] problemIntervalsToMove){
+  private MappedData[] resortReads(ArrayList<RepeatInterval>[] intervals,
+                                   MappedData[] mappedData){
     MappedData[] mappedDataAfterCuts = new MappedData[intervals.length];
     HashMap<String, PairedRead>[] needToRemap = new HashMap[intervals.length];
     HashSet<String>[] mapped = new HashSet[intervals.length];
     for(int i = 0; i < mappedDataAfterCuts.length; i++){
       mappedDataAfterCuts[i] = new MappedData();
       needToRemap[i] = new HashMap<>();
-      mapped[i] = new HashSet<>();
+      HashSet<String> mapped_i = new HashSet<>();
+      for(MappedRead mappedRead: mappedData[i].mappedReads){
+        mapped_i.add(mappedRead.name);
+      }
+      mapped[i] = mapped_i;
     }
     for(int i = 0; i < intervals.length; i++){
-      ArrayList<Postprocessor.SendToInterval> sendToIntervals = intervals[i];
+      ArrayList<RepeatInterval> repeatIntervals = intervals[i];
       MappedData mappedData_i = mappedData[i];
       MappedData mappedData_AfterCuts_i = mappedDataAfterCuts[i];
-      int[] coordConv = coordConvert[i];
-      resortConcordant(mappedData_i.concordant, problemIntervals[i], problemIntervalsToMove[i], coordConv,
-          mappedData_AfterCuts_i, sendToIntervals, mapped, needToRemap, i);
-      resortDiscordant(mappedData_i.discordant, problemIntervals[i], problemIntervalsToMove[i], coordConv,
-          sendToIntervals, mapped, needToRemap, i);
-      resortLeft(mappedData_i.leftMateMapped, problemIntervals[i], problemIntervalsToMove[i], coordConv,
-          mappedData_AfterCuts_i, sendToIntervals, mapped, needToRemap, i);
-      resortRight(mappedData_i.rightMateMapped, problemIntervals[i], problemIntervalsToMove[i], coordConv,
-          mappedData_AfterCuts_i, sendToIntervals, mapped, needToRemap, i);
+      resortConcordant(mappedData_i.concordant,
+          mappedData_AfterCuts_i, repeatIntervals, mapped, needToRemap, i);
+      resortDiscordant(mappedData_i.discordant,
+          repeatIntervals, mapped, needToRemap, i);
+      resortLeft(mappedData_i.leftMateMapped,
+          mappedData_AfterCuts_i, repeatIntervals, mapped, needToRemap, i);
+      resortRight(mappedData_i.rightMateMapped,
+          mappedData_AfterCuts_i, repeatIntervals, mapped, needToRemap, i);
       for(PairedRead pairedRead: mappedData_i.unmapped){
         needToRemap[i].put(pairedRead.name, pairedRead);
       }
@@ -444,7 +285,7 @@ public class RefBasedAssembler extends Constants{
   }
 
   private void reformatAssembly(ConsensusBuilderWithReassembling consensusBuilder,
-                                ArrayList<Postprocessor.SendToInterval> sendToIntervals){
+                                ArrayList<RepeatInterval> repeatIntervals){
     byte[] finalConsensus = consensusBuilder.finalConsensus.getBytes();
     int[] coordTransform = new int[finalConsensus.length];
     if(consensusBuilder.genomeIsFragmented){
@@ -453,7 +294,11 @@ public class RefBasedAssembler extends Constants{
         contigsFragmented[i] = new ArrayList<>();
       }
       int[] fragmentEnds = new int[consensusBuilder.contigsFragmented.length];
-      for(int i = 0; i < consensusBuilder.contigsFragmented.length; i++){
+      for(byte[] contig: consensusBuilder.contigsFragmented[0]){
+        fragmentEnds[0] += contig.length;
+      }
+      for(int i = 1; i < consensusBuilder.contigsFragmented.length; i++){
+        fragmentEnds[i] = fragmentEnds[i - 1];
         for(byte[] contig: consensusBuilder.contigsFragmented[i]){
           fragmentEnds[i] += contig.length;
         }
@@ -462,7 +307,7 @@ public class RefBasedAssembler extends Constants{
       int contigID = 0;
       int predPos = 0;
       int assemblyPos = 0;
-      for(Postprocessor.SendToInterval interval : sendToIntervals){
+      for(RepeatInterval interval : repeatIntervals){
         while(interval.start >= consensusBuilder.contigEnds[contigID]){
           int endPos = consensusBuilder.contigEnds[contigID];
           while(endPos > fragmentEnds[fragmentID]){
@@ -539,7 +384,7 @@ public class RefBasedAssembler extends Constants{
       ArrayList<byte[]> contigs = new ArrayList<>();
       int contigID = 0;
       int assemblyPos = 0;
-      for(Postprocessor.SendToInterval interval : sendToIntervals){
+      for(RepeatInterval interval : repeatIntervals){
         while(interval.start >= consensusBuilder.contigEnds[contigID]){
           int endPos = consensusBuilder.contigEnds[contigID];
           if(endPos > predPos){
@@ -552,7 +397,9 @@ public class RefBasedAssembler extends Constants{
           predPos = endPos;
           contigID ++;
         }
-        contigs.add(Arrays.copyOfRange(finalConsensus, predPos, interval.start));
+        if(interval.start - predPos > 0){
+          contigs.add(Arrays.copyOfRange(finalConsensus, predPos, interval.start));
+        }
         for(int i = predPos; i < interval.start; i++){
           coordTransform[i] = assemblyPos;
           assemblyPos ++;
@@ -603,6 +450,66 @@ public class RefBasedAssembler extends Constants{
     }
   }
 
+  private int[] recomputeAssemblyConsensus(ConsensusBuilderWithReassembling consensusBuilder) throws InterruptedException{
+//    Reference genome = new Reference(consensusBuilder.finalConsensus);
+    byte[] consensus = consensusBuilder.getConsensusSimple(false, 0, consensusBuilder.finalConsensus.getBytes());
+    consensusBuilder.finalConsensus = new String(consensus);
+    int[] res = new int[consensus.length];
+    if(consensusBuilder.genomeIsFragmented){
+      ArrayList<byte[]>[] contigsFragmented =
+          new ArrayList[consensusBuilder.contigsFragmented.length];
+      for(int i = 0, k = 0, predPos = 0; i < contigsFragmented.length; i++){
+        ArrayList<byte[]> list = new ArrayList<>();
+        ArrayList<byte[]> old = consensusBuilder.contigsFragmented[i];
+        for(int j = 0; j < old.size(); j++, k++){
+          int contigEnd = consensusBuilder.contigEnds[k];
+          list.add(consensusBuilder.finalConsensus.substring(predPos, contigEnd).getBytes());
+          predPos = contigEnd;
+        }
+        contigsFragmented[i] = list;
+      }
+      consensusBuilder.contigsFragmented = contigsFragmented;
+    }else{
+      ArrayList<String> contigs = new ArrayList<>();
+      TByteArrayList consensusNew = new TByteArrayList();
+      boolean isGap = true;
+      int prev = 0;
+      for(int i = 0, j = 0, k = 0; i < consensus.length; i++){
+        if(consensus[i] == GAP){
+          if(!isGap){
+            // gap is started
+            isGap = true;
+            contigs.add(consensusBuilder.finalConsensus.substring(prev, i));
+          }
+          res[i] = -100000;
+        }else{
+          if(isGap){
+            isGap = false;
+            prev = i;
+          }else if(i == consensusBuilder.contigEnds[j]){
+            contigs.add(consensusBuilder.finalConsensus.substring(prev, i));
+            prev = i;
+          }
+          consensusNew.add(consensus[i]);
+          res[i] = k;
+          k++;
+        }
+        if(i == consensusBuilder.contigEnds[j]){
+          j++;
+        }
+      }
+      contigs.add(consensusBuilder.finalConsensus.substring(prev));
+      consensusBuilder.contigs = contigs.toArray(new String[contigs.size()]);
+      consensusBuilder.contigEnds = new int[contigs.size()];
+      for(int i = 0, j = 0; i < consensusBuilder.contigs.length; i++){
+        j += consensusBuilder.contigs[i].length();
+        consensusBuilder.contigEnds[i] = j;
+      }
+      consensusBuilder.finalConsensus = consensusNew.toString();
+    }
+    return res;
+  }
+
   public void assemble() throws IOException, InterruptedException, InvocationTargetException, InstantiationException, IllegalAccessException, JDOMException{
     long time = System.currentTimeMillis();
     ArrayList<PairedRead> reads = dataReader.readFilesWithReads();
@@ -610,6 +517,7 @@ public class RefBasedAssembler extends Constants{
     if(selectedRefs.size() == 0){
       Reference genome = new Reference(document);
       genome.reads = reads;
+      genome.problemReads = new ArrayList<>();
       selectedRefs.add(genome);
     }
     if(useMajor){
@@ -634,9 +542,10 @@ public class RefBasedAssembler extends Constants{
       Reference[] selRefs = selectedRefs.toArray(new Reference[assemblies.length]);
       MappedData[] mappedData = new MappedData[assemblies.length];
       int[][] coordConvert = new int[assemblies.length][];
-      Interval[][] problemIntervals = new Interval[assemblies.length][];
+      ProblemInterval[][] problemIntervals = new ProblemInterval[assemblies.length][];
       ConsensusBuilderWithReassembling[] cBuilders = new ConsensusBuilderWithReassembling[assemblies.length];
       int[] readNums = new int[assemblies.length];
+      int[][] contigEnds = new int[assemblies.length][];
       for(int i = 0; i < selRefs.length; i++){
         ConsensusBuilderWithReassembling consensusBuilderGC = buildUsingRef(document, selRefs[i]);
         assemblies[i] = consensusBuilderGC.finalConsensus;
@@ -645,15 +554,14 @@ public class RefBasedAssembler extends Constants{
         problemIntervals[i] = consensusBuilderGC.problemIntervals;
         cBuilders[i] = consensusBuilderGC;
         readNums[i] = consensusBuilderGC.reads.size();
+        contigEnds[i] = consensusBuilderGC.contigEnds;
         Reference ref = selRefs[i];
-        consensusBuilderGC.printAssembly(ref.name.replace(' ', '_') + "_assembly_no_postproc.fasta");
+        consensusBuilderGC.remapReadsToAssembly();
+        consensusBuilderGC.printAssembly(ref.name + "_assembly_no_postproc.fasta");
       }
-      ArrayList<Postprocessor.SendToInterval>[] intervals =
-          postprocessor.findRegionsToCut(assemblies, selRefs, readNums);
-      int[][] problemIntervalsToMove = chooseIntervalsToMove(problemIntervals, intervals,
-          coordConvert, assemblies);
-      MappedData[] mappedDataAfterCuts = resortReads(problemIntervals, intervals, mappedData,
-          coordConvert, problemIntervalsToMove);
+      ArrayList<RepeatInterval>[] intervals =
+          postprocessor.findRegionsToCut(assemblies, contigEnds, selRefs, readNums);
+      MappedData[] mappedDataAfterCuts = resortReads(intervals, mappedData);
       for(int i = 0; i < assemblies.length; i++){
         ConsensusBuilderWithReassembling cBuilder = cBuilders[i];
         reformatAssembly(cBuilder, intervals[i]);
@@ -662,14 +570,21 @@ public class RefBasedAssembler extends Constants{
           adjustCoord(mappedRead, cBuilder.genomeToAssembly);
         }
         Reference ref = selRefs[i];
-        Reference genome = new Reference(cBuilder);
-        cBuilder.mapper.mapReads(cBuilder.mappedData, genome);
-        recomputeAssemblyConsensus(cBuilder);
-        cBuilder.printAssembly(ref.name.replace(' ', '_') + "_assembly.fasta");
+        cBuilder.mapper.mapReads(cBuilder.mappedData, new Reference(cBuilder));
+        int[] coordNew = recomputeAssemblyConsensus(cBuilder);
+        for(MappedRead mappedRead : cBuilder.mappedData.mappedReads){
+          adjustCoord(mappedRead, coordNew);
+        }
+        cBuilder.printAssembly(ref.name + "_assembly.fasta");
         BamPrinter bamPrinter = new BamPrinter();
-        String bamPath = outPath + ref.name.replace(' ', '_') + "_mapped_reads.bam";
-        bamPrinter.printBAM(mappedDataAfterCuts[i], genome, bamPath);
-        //cBuilder.indexBam(bamPath);
+        Reference genome = new Reference(cBuilder);
+        String bamPath = outPath + ref.name + "_mapped_reads.bam";
+        bamPrinter.printBAM(cBuilder.mappedData, genome, bamPath);
+        if(refFinder.debug && ref.problemReads.size() != 0){
+          MappedData garbage = cBuilder.mapper.mapReads(ref.problemReads, genome);
+          bamPath = outPath + ref.name + "_garbage.bam";
+          bamPrinter.printBAM(garbage, genome, bamPath);
+        }
       }
     }else{
       for(Reference ref : selectedRefs){
@@ -679,37 +594,8 @@ public class RefBasedAssembler extends Constants{
     logger.println("Total time: " + (System.currentTimeMillis() - time)/1000);
   }
 
-  private void recomputeAssemblyConsensus(ConsensusBuilderWithReassembling consensusBuilder) throws InterruptedException{
-//    Reference genome = new Reference(consensusBuilder.finalConsensus);
-    byte[] consensus = consensusBuilder.getConsensusSimple(true, 1, consensusBuilder.finalConsensus.getBytes());
-    consensusBuilder.finalConsensus = new String(consensus);
-    if(consensusBuilder.genomeIsFragmented){
-      ArrayList<byte[]>[] contigsFragmented =
-          new ArrayList[consensusBuilder.contigsFragmented.length];
-      for(int i = 0, k = 0, predPos = 0; i < contigsFragmented.length; i++){
-        ArrayList<byte[]> list = new ArrayList<>();
-        ArrayList<byte[]> old = consensusBuilder.contigsFragmented[i];
-        for(int j = 0; j < old.size(); j++, k++){
-          int contigEnd = consensusBuilder.contigEnds[k];
-          list.add(consensusBuilder.finalConsensus.substring(predPos, contigEnd).getBytes());
-          predPos = contigEnd;
-        }
-        contigsFragmented[i] = list;
-      }
-      consensusBuilder.contigsFragmented = contigsFragmented;
-    }else{
-      String[] contigs = new String[consensusBuilder.contigs.length];
-      for(int i = 0, predPos = 0; i < consensusBuilder.contigEnds.length; i++){
-        int contigEnd = consensusBuilder.contigEnds[i];
-        contigs[i] = consensusBuilder.finalConsensus.substring(predPos, contigEnd);
-        predPos = contigEnd;
-      }
-      consensusBuilder.contigs = contigs;
-    }
-  }
-
   private static void printUsage(){
-    System.out.println("Usage: java -cp ./ViRGA.jar RefBasedAssembler pathToConfigFile");
+    System.out.println("Usage: java -cp ./VirGenA.jar RefBasedAssembler pathToConfigFile");
   }
 
   public static void main(String[] args){
