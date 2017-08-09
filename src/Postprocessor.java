@@ -507,7 +507,7 @@ class Postprocessor extends Constants{
     makeBlastDB(assemblies, selectedRefs);
     ArrayList<RepeatInterval>[] intervals = getRawIntervals(assemblies, contigEnds, selectedRefs, readNums);
     ArrayList<RepeatInterval>[] res = filterIntervals(intervals, readNums);
-    updateIntervals(res);
+    res = updateIntervals(res);
     deleteBlastDB(selectedRefs);
     if(debug){
       BufferedWriter writer = new BufferedWriter(new FileWriter(outPath + "intervals.txt"));
