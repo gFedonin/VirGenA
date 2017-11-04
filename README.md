@@ -66,3 +66,7 @@ Results will be stored in ./res/ folder. Expected output is:
 01_AE.TH.90.CM240.U54771_assembly.fasta, B.FR.83.HXB2_LAI_IIIB_BRU.K03455_assembly.fasta, C.BW.96.96BW0502.AF110967_assembly.fasta   
 2. Sorted bam files with read alignments and corresponding index files (bai): 'reference_name'_mapped_reads.bam and 'reference_name'_mapped_reads.bai  
 3. Log file.
+
+### How to cite:
+
+Fedonin GG, Fantin YS, Favorov AV, Shipulin GA, Neverov AD. _VirGenA: a reference-based assembler for variable viral genomes._ Brief Bioinform, 2017 Jul 28. doi: 10.1093/bib/bbx079.
