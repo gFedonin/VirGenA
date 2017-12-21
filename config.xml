@@ -57,7 +57,7 @@
         <Enabled>true</Enabled>
         <MinFragmentLength>500</MinFragmentLength>
         <MinIdentity>0.99</MinIdentity>
-		<MinIdentityDifference>0.01</MinIdentityDifference>
+		<MinFragmentCoverage>0.99</MinFragmentCoverage>
         <Debug>false</Debug>
     </Postprocessor>
 </config>
