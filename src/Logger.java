@@ -45,7 +45,6 @@ public class Logger extends Constants{
     refAlignment = ReferenceAlignment.getInstance(document);
     Element referenceSelectorElement = document.getRootElement().getChild("ReferenceSelector");
     outPath = document.getRootElement().getChildText("OutPath");
-    refAlignment = ReferenceAlignment.getInstance(document);
     pathToLongestPaths = outPath + "longestPaths.txt";
     pathToMergedContigs = outPath + "mergedContigs.txt";
     pathToMergedContigsBam = outPath + "mergedContigs.bam";

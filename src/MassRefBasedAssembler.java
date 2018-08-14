@@ -33,6 +33,7 @@ public class MassRefBasedAssembler{
 
   public static void main(String[] args){
     try{
+      long time = System.currentTimeMillis();
       if(args.length == 0){
         printUsage();
         return;
@@ -197,12 +198,22 @@ public class MassRefBasedAssembler{
               if(repeat){
                 System.out.println("Working with " + sampleID);
                 RefBasedAssembler assembler = new RefBasedAssembler(config);
-                assembler.assemble();
+                try{
+                  assembler.assemble();
+                }catch(Exception e){
+                  e.printStackTrace(System.err);
+                  System.out.println("Problems with " + sampleID + ". Will keep working with the rest.");
+                }
               }
             }else{
               System.out.println("Working with " + sampleID);
               RefBasedAssembler assembler = new RefBasedAssembler(config);
-              assembler.assemble();
+              try{
+                assembler.assemble();
+              }catch(Exception e){
+                e.printStackTrace(System.err);
+                System.out.println("Problems with " + sampleID + ". Will keep working with the rest.");
+              }
             }
           }
         }else{
@@ -211,7 +222,12 @@ public class MassRefBasedAssembler{
           if(reassemble){
             System.out.println("Working with " + sampleID);
             ConsensusBuilderWithReassembling cBuilder = new ConsensusBuilderWithReassembling(config);
-            cBuilder.assemble(config);
+            try{
+              cBuilder.assemble(config);
+            }catch(Exception e){
+              e.printStackTrace(System.err);
+              System.out.println("Problems with " + sampleID + ". Will keep working with the rest.");
+            }
           }else{
             if(file.exists()){
               File logFile = new File(pathToOutFolder +
@@ -229,21 +245,37 @@ public class MassRefBasedAssembler{
                 if(assemblyDone != 1 || alignmentDone != 1){
                   System.out.println("Working with " + sampleID);
                   ConsensusBuilderWithReassembling cBuilder = new ConsensusBuilderWithReassembling(config);
-                  cBuilder.assemble(config);
+                  try{
+                    cBuilder.assemble(config);
+                  }catch(Exception e){
+                    e.printStackTrace(System.err);
+                    System.out.println("Problems with " + sampleID + ". Will keep working with the rest.");
+                  }
                 }
               }else{
                 System.out.println("Working with " + sampleID);
                 ConsensusBuilderWithReassembling cBuilder = new ConsensusBuilderWithReassembling(config);
-                cBuilder.assemble(config);
+                try{
+                  cBuilder.assemble(config);
+                }catch(Exception e){
+                  e.printStackTrace(System.err);
+                  System.out.println("Problems with " + sampleID + ". Will keep working with the rest.");
+                }
               }
             }else{
               System.out.println("Working with " + sampleID);
               ConsensusBuilderWithReassembling cBuilder = new ConsensusBuilderWithReassembling(config);
-              cBuilder.assemble(config);
+              try{
+                cBuilder.assemble(config);
+              }catch(Exception e){
+                e.printStackTrace(System.err);
+                System.out.println("Problems with " + sampleID + ". Will keep working with the rest.");
+              }
             }
           }
         }
       }
+      System.out.printf("Total time: %d, s", (System.currentTimeMillis() - time)/1000);
     }catch(Exception e){
       e.printStackTrace();
     }

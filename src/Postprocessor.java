@@ -21,12 +21,15 @@ class Postprocessor extends Constants{
 
   Postprocessor(Document document){
     Element element = document.getRootElement().getChild("Postprocessor");
-    debug = Boolean.parseBoolean(element.getChildText("Debug"));
-    outPath = document.getRootElement().getChildText("OutPath");
-    minLen = Integer.parseInt(element.getChildText("MinFragmentLength"));
-    minIdentity = Float.parseFloat(element.getChildText("MinIdentity"));
-    threadNum = Integer.parseInt(document.getRootElement().getChildText("ThreadNumber"));
-    minCoverage = Float.parseFloat(element.getChildText("MinFragmentCoverage"));
+    String enabled = element.getChildText("Enabled");
+    if(enabled.equals("true") || enabled.equals("True")){
+      debug = Boolean.parseBoolean(element.getChildText("Debug"));
+      outPath = document.getRootElement().getChildText("OutPath");
+      minLen = Integer.parseInt(element.getChildText("MinFragmentLength"));
+      minIdentity = Float.parseFloat(element.getChildText("MinIdentity"));
+      threadNum = Integer.parseInt(document.getRootElement().getChildText("ThreadNumber"));
+      minCoverage = Float.parseFloat(element.getChildText("MinFragmentCoverage"));
+    }
   }
 
   private void makeBlastDB(String[] assemblies, Reference[] refSeqs) throws IOException, InterruptedException{

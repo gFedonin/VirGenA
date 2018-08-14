@@ -26,17 +26,20 @@ class ReferenceAlignment extends Constants{
 
   private ReferenceAlignment(Document document){
     Element element = document.getRootElement().getChild("ReferenceSelector");
-    String refAlnPath = element.getChildText("ReferenceMSA");
-    String randomModelPath = element.getChild("MapperToMSA").getChildText("RandomModelPath");
-    threadNum = Integer.parseInt(document.getRootElement().getChildText("ThreadNumber"));
-    try {
-      DataInputStream inputStream = new DataInputStream(new FileInputStream(randomModelPath));
-      int k = inputStream.readInt();
-      inputStream.close();
-      readRefAlns(refAlnPath);
-      buildAlnIndex(k);
-    }catch (Exception e){
-      e.printStackTrace();
+    String enabled = element.getChildText("Enabled");
+    if(enabled.equals("true") || enabled.equals("True")){
+      String refAlnPath = element.getChildText("ReferenceMSA");
+      String randomModelPath = element.getChild("MapperToMSA").getChildText("RandomModelPath");
+      threadNum = Integer.parseInt(document.getRootElement().getChildText("ThreadNumber"));
+      try{
+        DataInputStream inputStream = new DataInputStream(new FileInputStream(randomModelPath));
+        int k = inputStream.readInt();
+        inputStream.close();
+        readRefAlns(refAlnPath);
+        buildAlnIndex(k);
+      }catch(Exception e){
+        e.printStackTrace();
+      }
     }
   }
 
