@@ -22,7 +22,7 @@ public class RandomModelMSA{
     this.modelK = modelK;
     this.coef = coef;
     counter = KMerCounterMSA.getInstance(scoreK, coef);
-    referenceAlignment = ReferenceAlignment.getInstance(scoreK, pathToMSA);
+    referenceAlignment = ReferenceAlignment.getInstance(scoreK, pathToMSA, threadNum);
   }
 
   void printModel(int readNum, int minReadLen,

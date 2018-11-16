@@ -287,6 +287,9 @@ public class RefBasedAssembler extends Constants{
   private void reformatAssembly(ConsensusBuilderWithReassembling consensusBuilder,
                                 ArrayList<RepeatInterval> repeatIntervals){
     byte[] finalConsensus = consensusBuilder.finalConsensus.getBytes();
+    if(finalConsensus.length == 0){
+      return;
+    }
     int[] coordTransform = new int[finalConsensus.length];
     if(consensusBuilder.genomeIsFragmented){
       ArrayList<byte[]>[] contigsFragmented = new ArrayList[consensusBuilder.contigEnds.length];

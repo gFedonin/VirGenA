@@ -43,8 +43,9 @@ class ReferenceAlignment extends Constants{
     }
   }
 
-  private ReferenceAlignment(int k, String refAlnPath){
+  private ReferenceAlignment(int k, String refAlnPath, int threadNum){
     try {
+      this.threadNum = threadNum;
       readRefAlns(refAlnPath);
       buildAlnIndex(k);
     }catch (Exception e){
@@ -59,9 +60,9 @@ class ReferenceAlignment extends Constants{
     return instance;
   }
 
-  static ReferenceAlignment getInstance(int k, String refAlnPath){
+  static ReferenceAlignment getInstance(int k, String refAlnPath, int threadNum){
     if(instance == null){
-      instance = new ReferenceAlignment(k, refAlnPath);
+      instance = new ReferenceAlignment(k, refAlnPath, threadNum);
     }
     return instance;
   }

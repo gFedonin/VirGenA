@@ -31,54 +31,42 @@ public class MarkovModel extends Constants{
           }
         }
         int[] cnt = counts.get(s);
+        if(cnt == null){
+          cnt = new int[4];
+          counts.put(s, cnt);
+        }
         switch(genome.charAt(j + K)){
           case 'A':
-            if(cnt == null){
-              cnt = new int[4];
-              counts.put(s, cnt);
-            }
             cnt[0]++;
             break;
           case 'T':
-            if(cnt == null){
-              cnt = new int[4];
-              counts.put(s, cnt);
-            }
             cnt[1]++;
             break;
           case 'G':
-            if(cnt == null){
-              cnt = new int[4];
-              counts.put(s, cnt);
-            }
             cnt[2]++;
             break;
           case 'C':
-            if(cnt == null){
-              cnt = new int[4];
-              counts.put(s, cnt);
-            }
             cnt[3]++;
             break;
           default:
             //System.out.println("Unknown nucleotide at pos " + (j + K - 1));
         }
       }
-      for(Map.Entry<String, int[]> entry : counts.entrySet()){
-        float[] fr = new float[4];
-        String key = entry.getKey();
-        freqs.put(key, fr);
-        int[] cnt = entry.getValue();
-        int total = 0;
-        for(int count : cnt){
-          total += count;
-        }
-        float cf = 1.0f/total;
-        fr[0] = cnt[0]*cf;
-        fr[1] = fr[0] + cnt[1]*cf;
-        fr[2] = fr[1] + cnt[2]*cf;
-        fr[3] = 1.0f;
+    }
+    for(Map.Entry<String, int[]> entry : counts.entrySet()){
+      float[] fr = new float[4];
+      String key = entry.getKey();
+      freqs.put(key, fr);
+      int[] cnt = entry.getValue();
+      int total = 0;
+      for(int count : cnt){
+        total += count;
       }
+      float cf = 1.0f/total;
+      fr[0] = cnt[0]*cf;
+      fr[1] = fr[0] + cnt[1]*cf;
+      fr[2] = fr[1] + cnt[2]*cf;
+      fr[3] = 1.0f;
     }
   }
 
