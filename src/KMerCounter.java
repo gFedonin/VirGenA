@@ -1,25 +1,53 @@
 import org.jdom2.Document;
 import org.jdom2.Element;
-import java.io.DataInputStream;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.util.*;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.TreeSet;
 
 /**
  * Created by Gennady on 06.12.2015.
  */
-class KMerCounter{
+class KMerCounter extends KMerCounterBase{
 
-  int K;
-  private String randomReadsCountsPath;
-  private float pValue;
-  int[] cutoffs;
-  private float lowCoef;
-  private float highCoef;
   private static KMerCounter instance;
 
+  private KMerCounter(Document document){
+    try{
+      Element element = document.getRootElement().getChild("Mapper");
+      randomReadsCountsPath = element.getChildText("RandomModelPath");
+      pValue = Float.parseFloat(element.getChildText("pValue"));
+      cutoffs = readRandomModel();
+    }catch(Exception e){
+      e.printStackTrace();
+    }
+  }
+
+  KMerCounter(){}
+
+  private KMerCounter(int K, float coef){
+    this.K = K;
+    highCoef = coef;
+    lowCoef = 1.0f/coef;
+  }
+
+  static KMerCounter getInstance(Document document){
+    if(instance == null){
+      instance = new KMerCounter(document);
+    }
+    return instance;
+  }
+
+  static KMerCounter getInstance(int K, float coef){
+    if(instance == null){
+      instance = new KMerCounter(K, coef);
+    }
+    return instance;
+  }
+
   private LongHit[] mergeHits(int[][] hits){
-    ArrayList<LongHit> longHits = new ArrayList();
+    ArrayList<LongHit> longHits = new ArrayList<>();
     ArrayList<LongHit> currSet = new ArrayList<>();
     ArrayList<LongHit> nextSet = new ArrayList<>();
     int firstMatch = 0;
@@ -149,135 +177,35 @@ class KMerCounter{
     return mergeHits(matches);
   }
 
-  private Location getInitState(int from, int to, int readLen,
-                                LongHit[] longHits, boolean[] isAdjacent){
-    Location res = new Location();
-    int totalHit = longHits.length;
-    LongHit h_i = longHits[0];
-    res.start = Math.max(from, h_i.genomePos - h_i.readPos*3/2);
-    res.end = Math.min(h_i.genomePos + h_i.len + K + (readLen - h_i.readPos - h_i.len - K)*3/2, to);
-    res.startIndex = 0;
-    int count = h_i.len;
-    int j;
-    for(j = 1; j < totalHit ; j++){
-      LongHit h_j = longHits[j];
-      if(h_j.genomePos + K + h_j.len > res.end){
-        break;
-      }
-      count += h_j.len;
-      if(isAdjacent[j - 1]){
-        count ++;
-      }
-    }
-    res.endIndex = j - 1;
-    res.count = count;
-    return res;
-  }
-
-  private void computeCount(int from, int to, int readLen, LongHit[] longHits,
-                            int i, Location location, boolean[] isAdjacent){
-    int totalHit = longHits.length;
-    LongHit h_i = longHits[i];
-    int start = Math.max(from, h_i.genomePos - h_i.readPos*3/2);
-    int end = Math.min(h_i.genomePos + h_i.len + K + (readLen - h_i.readPos - h_i.len - K)*3/2, to);
-    int j;
-    int count = location.count;
-    if(start != location.start){
-      int sIndex;
-      if(start < location.start){
-        for(j = location.startIndex - 1; j >= 0; j--){
-          LongHit h_j = longHits[j];
-          if(h_j.genomePos < start){
-            break;
-          }
-          if(isAdjacent[j]){
-            count ++;
-          }
-          count += h_j.len;
-        }
-        sIndex = j + 1;
-      }else{
-        LongHit h_j = longHits[location.startIndex];
-        sIndex = location.startIndex;
-        if(h_j.genomePos < start){
-          count -= h_j.len;
-          for(j = location.startIndex + 1; j < totalHit; j++){
-            h_j = longHits[j];
-            if(isAdjacent[j - 1]){
-              count --;
-            }
-            if(h_j.genomePos >= start){
-              break;
-            }
-            count -= h_j.len;
-          }
-          if(j < totalHit){
-            sIndex = j;
-          }
-        }
-      }
-      location.start = start;
-      location.startIndex = sIndex;
-    }
-    if(end != location.end){
-      int eIndex;
-      if(end > location.end){
-        for(j = location.endIndex + 1; j < totalHit ; j++){
-          LongHit h_j = longHits[j];
-          if(h_j.genomePos + K + h_j.len > end){
-            break;
-          }
-          if(isAdjacent[j - 1]){
-            count ++;
-          }
-          count += h_j.len;
-        }
-        eIndex = j - 1;
-      }else{
-        LongHit h_j = longHits[location.endIndex];
-        eIndex = location.endIndex;
-        if(h_j.genomePos + K + h_j.len > end){
-          count -= h_j.len;
-          for(j = location.endIndex - 1; j >= 0; j--){
-            h_j = longHits[j];
-            if(isAdjacent[j]){
-              count --;
-            }
-            if(h_j.genomePos + K + h_j.len <= end){
-              break;
-            }
-            count -= h_j.len;
-          }
-          if(j >= 0){
-            eIndex = j;
-          }
-        }
-      }
-      location.end = end;
-      location.endIndex = eIndex;
-    }
-    location.count = count;
-  }
 
   private Location getInitState(int[] contigEnds, int readLen,
                                 LongHit[] longHits, boolean[] isAdjacent){
     Location res = new Location();
     int totalHit = longHits.length;
-    LongHit h_i = longHits[0];
-    int startMax = 0;
-    int endMax = 0;
-    for(int j = 0, start = 0; j < contigEnds.length; j++){
-      int end = contigEnds[j];
-      int locStart = Math.max(start, h_i.genomePos - h_i.readPos*3/2);
-      int locEnd = Math.min(h_i.genomePos + h_i.len + K + (readLen - h_i.readPos - h_i.len - K)*3/2, end);
-      if(locEnd - locStart > endMax - startMax){
-        endMax = locEnd;
-        startMax = locStart;
+    LongHit h_i = null;
+    outer:
+    for(int i = 0; i < totalHit; i++){
+      h_i = longHits[i];
+//    int startMax = 0;
+//    int endMax = 0;
+      for(int j = 0, start = 0; j < contigEnds.length; j++){
+        int end = contigEnds[j];
+        if(start <= h_i.genomePos && h_i.genomePos < end){
+          res.start = Math.max(start, h_i.genomePos - h_i.readPos*3/2);
+          res.end = Math.min(h_i.genomePos + h_i.len + K + (readLen - h_i.readPos - h_i.len - K)*3/2, end);
+          if(h_i.genomePos + h_i.len + K <= res.end){
+            break outer;
+          }
+        }
+//      if(locEnd - locStart > endMax - startMax){
+//        endMax = locEnd;
+//        startMax = locStart;
+//      }
+        start = end;
       }
-      start = end;
     }
-    res.start = startMax;
-    res.end = endMax;
+//    res.start = startMax;
+//    res.end = endMax;
     res.startIndex = 0;
     int count = h_i.len;
     int j;
@@ -294,101 +222,6 @@ class KMerCounter{
     res.endIndex = j - 1;
     res.count = count;
     return res;
-  }
-
-  private void computeCount(int[] contigEnds, int readLen, LongHit[] longHits,
-                            int i, Location location, boolean[] isAdjacent){
-    int totalHit = longHits.length;
-    LongHit h_i = longHits[i];
-    int start = 0;
-    int end = 0;
-    for(int j = 0, s = 0; j < contigEnds.length; j++){
-      int e = contigEnds[j];
-      int locStart = Math.max(s, h_i.genomePos - h_i.readPos*3/2);
-      int locEnd = Math.min(h_i.genomePos + h_i.len + K + (readLen - h_i.readPos - h_i.len - K)*3/2, e);
-      if(locEnd - locStart > end - start){
-        end = locEnd;
-        start = locStart;
-      }
-      s = e;
-    }
-    int j;
-    int count = location.count;
-    if(start != location.start){
-      int sIndex;
-      if(start < location.start){
-        for(j = location.startIndex - 1; j >= 0; j--){
-          LongHit h_j = longHits[j];
-          if(h_j.genomePos < start){
-            break;
-          }
-          if(isAdjacent[j]){
-            count ++;
-          }
-          count += h_j.len;
-        }
-        sIndex = j + 1;
-      }else{
-        LongHit h_j = longHits[location.startIndex];
-        sIndex = location.startIndex;
-        if(h_j.genomePos < start){
-          count -= h_j.len;
-          for(j = location.startIndex + 1; j < totalHit; j++){
-            h_j = longHits[j];
-            if(isAdjacent[j - 1]){
-              count --;
-            }
-            if(h_j.genomePos >= start){
-              break;
-            }
-            count -= h_j.len;
-          }
-          if(j < totalHit){
-            sIndex = j;
-          }
-        }
-      }
-      location.start = start;
-      location.startIndex = sIndex;
-    }
-    if(end != location.end){
-      int eIndex;
-      if(end > location.end){
-        for(j = location.endIndex + 1; j < totalHit ; j++){
-          LongHit h_j = longHits[j];
-          if(h_j.genomePos + K + h_j.len > end){
-            break;
-          }
-          if(isAdjacent[j - 1]){
-            count ++;
-          }
-          count += h_j.len;
-        }
-        eIndex = j - 1;
-      }else{
-        LongHit h_j = longHits[location.endIndex];
-        eIndex = location.endIndex;
-        if(h_j.genomePos + K + h_j.len > end){
-          count -= h_j.len;
-          for(j = location.endIndex - 1; j >= 0; j--){
-            h_j = longHits[j];
-            if(isAdjacent[j]){
-              count --;
-            }
-            if(h_j.genomePos + K + h_j.len <= end){
-              break;
-            }
-            count -= h_j.len;
-          }
-          if(j >= 0){
-            eIndex = j;
-          }
-        }
-      }
-      location.end = end;
-      location.endIndex = eIndex;
-    }
-    location.count = count;
   }
 
   int computeKMerCount(byte[] read, HashMap<String, int[]> index, int from, int to){
@@ -400,16 +233,7 @@ class KMerCounter{
       return 0;
     }
 
-    boolean[] isAdjacent = new boolean[totalHit];
-    Hit prev = matches[0];
-    for(int i = 1; i < totalHit; i++){
-      Hit h_j = matches[i];
-      float rate = (float)(h_j.genomePos - prev.genomePos)/(h_j.readPos - prev.readPos);
-      if(lowCoef <= rate && rate <= highCoef){
-        isAdjacent[i - 1] = true;
-      }
-      prev = h_j;
-    }
+    boolean[] isAdjacent = concordanceArray(matches);
     Location state = getInitState(from, to, readLen, matches, isAdjacent);
     int maxCount = state.count;
     for(int i = 1; i < totalHit; i++){
@@ -421,98 +245,19 @@ class KMerCounter{
     return maxCount;
   }
 
-
-  private KMerCounter(Document document){
-    try{
-      Element element = document.getRootElement().getChild("Mapper");
-      randomReadsCountsPath = element.getChildText("RandomModelPath");
-      pValue = Float.parseFloat(element.getChildText("pValue"));
-      cutoffs = readRandomModel();
-    }catch(Exception e){
-      e.printStackTrace();
-    }
-  }
-
-  KMerCounter(){}
-
-  private KMerCounter(int K, float coef){
-    this.K = K;
-    highCoef = coef;
-    lowCoef = 1.0f/coef;
-  }
-
-  static KMerCounter getInstance(Document document){
-    if(instance == null){
-      instance = new KMerCounter(document);
-    }
-    return instance;
-  }
-
-  static KMerCounter getInstance(int K, float coef){
-    if(instance == null){
-      instance = new KMerCounter(K, coef);
-    }
-    return instance;
-  }
-
-  private int[] readRandomModel()
-      throws IOException{
-    DataInputStream inputStream = new DataInputStream(new FileInputStream(randomReadsCountsPath));
-    K = inputStream.readInt();
-    highCoef = inputStream.readFloat();
-    lowCoef = 1/highCoef;
-    int minReadLen = inputStream.readInt();
-    int maxReadLen = inputStream.readInt();
-    int step = inputStream.readInt();
-    int num = inputStream.readInt();
-    int size = (maxReadLen - minReadLen)/step + 1;
-    int[] cutoffsInterpolation = new int[size];
-    for(int i = 0; i < size; i++){
-      int[] counts = new int[num];
-      for(int j = 0; j < num; j++){
-        counts[j] = inputStream.readInt();
-      }
-      int index = Math.round(num*(1.0f - pValue));
-      cutoffsInterpolation[i] = counts[index];
-    }
-    inputStream.close();
-    int[] cutoffs = new int[maxReadLen + 1];
-    for(int i = 0; i < minReadLen; i++){
-      cutoffs[i] = cutoffsInterpolation[0];
-    }
-    for(int i = minReadLen; i < maxReadLen; i++){
-      int left = (i - minReadLen)/step;
-      int distToLeft = i - left*step - minReadLen;
-      int distToRight = step - distToLeft;
-      cutoffs[i] = (distToRight*cutoffsInterpolation[left] +
-          distToLeft*cutoffsInterpolation[left + 1])/step;
-    }
-    cutoffs[maxReadLen] = cutoffsInterpolation[size - 1];
-    return cutoffs;
-  }
-
   MappedRead mapReadToRegion(byte[] read, HashMap<String, int[]> index, int from, int to){
     int readLen = read.length;
     String readStr = new String(read);
-    LongHit[] matches = getHits(readStr, index);
-    int totalHit = matches.length;
+    LongHit[] longHits = getHits(readStr, index);
+    int totalHit = longHits.length;
     if(totalHit == 0){
       return null;
     }
-    boolean[] isAdjacent = new boolean[totalHit];
-    LongHit prev = matches[0];
-    for(int i = 1; i < totalHit; i++){
-      LongHit h_j = matches[i];
-      float rate = (float)(h_j.genomePos - prev.genomePos)/(h_j.readPos - prev.readPos);
-      if(lowCoef <= rate && rate <= highCoef){
-        isAdjacent[i - 1] = true;
-      }
-      prev = h_j;
-    }
-    Location state = getInitState(from, to, readLen, matches, isAdjacent);
+    boolean[] isAdjacent = concordanceArray(longHits);
+    Location state = getInitState(from, to, readLen, longHits, isAdjacent);
     MappedRead res = new MappedRead(state.start, state.end, state.count);
     for(int i = 1; i < totalHit; i++){
-      computeCount(from, to, readLen, matches, i, state, isAdjacent);
+      computeCount(from, to, readLen, longHits, i, state, isAdjacent);
       if(state.count > res.count){
         res.count = state.count;
         res.start = state.start;
@@ -523,64 +268,77 @@ class KMerCounter{
     return res;
   }
 
-  MappedRead mapReadToRegion(byte[] read, HashMap<String, int[]> index, int[] contigEnds){
-    int readLen = read.length;
-    String readStr = new String(read);
-    LongHit[] matches = getHits(readStr, index);
-    int totalHit = matches.length;
-    if(totalHit == 0){
-      return null;
-    }
-    boolean[] isAdjacent = new boolean[totalHit];
-    Hit prev = matches[0];
-    for(int i = 1; i < totalHit; i++){
-      Hit h_j = matches[i];
-      float rate = (float)(h_j.genomePos - prev.genomePos)/(h_j.readPos - prev.readPos);
-      if(lowCoef <= rate && rate <= highCoef){
-        isAdjacent[i - 1] = true;
+  private LongHit[] splitLongHits(LongHit[] longHits, int[] contigEnds){
+    int contigEnd = contigEnds[0];
+    LongHit hit = longHits[0];
+    ArrayList<LongHit> splitted = new ArrayList<>();
+    int i = 0, j = 0;
+    while(true){
+      if(hit.genomePos < contigEnd){
+        if(hit.genomePos + K + hit.len > contigEnd){
+          // hit intersects with the next contig
+          if(contigEnd - hit.genomePos >= K){
+            //first part is long enough -> create new hit
+            LongHit newHit = new LongHit(hit.genomePos, hit.readPos);
+            newHit.len = contigEnd - hit.genomePos - K;
+            splitted.add(newHit);
+          }
+          if(hit.genomePos + K + hit.len - contigEnd >= K){
+            //second part is long enough -> truncate hit from left to the end of contig
+            hit.readPos += contigEnd - hit.genomePos;
+            hit.len -= contigEnd - hit.genomePos;
+            hit.genomePos = contigEnd;
+          }else{
+            j ++;
+            if(j < longHits.length){
+              hit = longHits[j];
+            }else{
+              break;
+            }
+          }
+        }else{
+          splitted.add(hit);
+          j ++;
+          if(j < longHits.length){
+            hit = longHits[j];
+          }else{
+            break;
+          }
+        }
+      }else{
+        i ++;
+        contigEnd = contigEnds[i];
       }
-      prev = h_j;
     }
-    Location state = getInitState(contigEnds, readLen, matches, isAdjacent);
-    MappedRead res = new MappedRead(state.start, state.end, state.count);
-    for(int i = 1; i < totalHit; i++){
-      computeCount(contigEnds, readLen, matches, i, state, isAdjacent);
-      if(state.count > res.count){
-        res.count = state.count;
-        res.start = state.start;
-        res.end = state.end;
-      }
-    }
-    res.seq = read;
-    return res;
+    return splitted.toArray(new LongHit[splitted.size()]);
   }
 
-  MappedRead[] getNBestRegions(byte[] read, HashMap<String, int[]> index, int from, int to){
-    int readLen = read.length;
-    String readStr = new String(read);
-    LongHit[] matches = getHits(readStr, index);
-    int totalHit = matches.length;
-    if(totalHit == 0){
-      return null;
-    }
-    boolean[] isAdjacent = new boolean[totalHit];
-    Hit prev = matches[0];
-    for(int i = 1; i < totalHit; i++){
-      Hit h_j = matches[i];
-      float rate = (float)(h_j.genomePos - prev.genomePos)/(h_j.readPos - prev.readPos);
-      if(lowCoef <= rate && rate <= highCoef){
-        isAdjacent[i - 1] = true;
-      }
-      prev = h_j;
-    }
+  MappedRead[] moveWindow(LongHit[] longHits, boolean[] isAdjacent, int[] contigEnds, Location location, int readLen){
+  int totalHit = longHits.length;
     int cutoff = cutoffs[readLen];
-    Location location = getInitState(from, to, readLen, matches, isAdjacent);
     ArrayList<MappedRead> bestPositions = new ArrayList<>();
     if(location.count > cutoff){
       bestPositions.add(new MappedRead(location.start, location.end, location.count));
     }
     for(int i = 1; i < totalHit; i++){
-      computeCount(from, to, readLen, matches, i, location, isAdjacent);
+//      int count = matches[location.startIndex].len;
+//      for(int j = location.startIndex + 1; j <= location.endIndex; j++){
+//        count += matches[j].len;
+//        if(isAdjacent[j - 1]){
+//          count ++;
+//        }
+//      }
+//      if(count != location.count){
+//        System.out.println("!!!");
+//        int a = 0;
+//      }
+//      if(i == 151){
+//        int a = 0;
+//      }
+      computeCount(contigEnds, readLen, longHits, i, location, isAdjacent);
+//      if(location.count < 0){
+//        int a = 0;
+//      }
       if(location.count > cutoff){
         bestPositions.add(new MappedRead(location.start, location.end, location.count));
       }
@@ -588,88 +346,23 @@ class KMerCounter{
     if(bestPositions.size() == 0){
       return null;
     }
-    Collections.sort(bestPositions, new CoordComparator());
-    ArrayList<MappedRead> res = new ArrayList<>();
-    MappedRead pivot = bestPositions.get(0);
-    for(int i = 1; i < bestPositions.size(); i++){
-      MappedRead curr = bestPositions.get(i);
-      if(pivot.end > curr.start){
-        // intersection
-        if(pivot.count < curr.count){
-          pivot = curr;
-        }
-      }else{
-        res.add(pivot);
-        pivot = curr;
-      }
-    }
-    res.add(pivot);
-    return res.toArray(new MappedRead[res.size()]);
-  }
-
-  private class CoordComparator implements Comparator{
-
-    @Override
-    public int compare(Object o1, Object o2){
-      MappedRead mRead1 = (MappedRead) o1;
-      MappedRead mRead2 = (MappedRead) o2;
-      if(mRead1.start == mRead2.start){
-        return mRead2.end - mRead1.end;
-      }
-      return mRead1.start - mRead2.start;
-    }
+    return pruneWindows(bestPositions);
   }
 
   MappedRead[] getNBestRegions(byte[] read, HashMap<String, int[]> index, int[] contigEnds){
-    int readLen = read.length;
     String readStr = new String(read);
-    LongHit[] matches = getHits(readStr, index);
-    int totalHit = matches.length;
+    LongHit[] longHits = getHits(readStr, index);
+    if(longHits.length == 0){
+      return null;
+    }
+    longHits = splitLongHits(longHits, contigEnds);
+    int totalHit = longHits.length;
     if(totalHit == 0){
       return null;
     }
-    boolean[] isAdjacent = new boolean[totalHit];
-    Hit prev = matches[0];
-    for(int i = 1; i < totalHit; i++){
-      Hit h_j = matches[i];
-      float rate = (float)(h_j.genomePos - prev.genomePos)/(h_j.readPos - prev.readPos);
-      if(lowCoef <= rate && rate <= highCoef){
-        isAdjacent[i - 1] = true;
-      }
-      prev = h_j;
-    }
-    int cutoff = cutoffs[readLen];
-    Location location = getInitState(contigEnds, readLen, matches, isAdjacent);
-    ArrayList<MappedRead> bestPositions = new ArrayList<>();
-    if(location.count > cutoff){
-      bestPositions.add(new MappedRead(location.start, location.end, location.count));
-    }
-    for(int i = 1; i < totalHit; i++){
-      computeCount(contigEnds, readLen, matches, i, location, isAdjacent);
-      if(location.count > cutoff){
-        bestPositions.add(new MappedRead(location.start, location.end, location.count));
-      }
-    }
-    if(bestPositions.size() == 0){
-      return null;
-    }
-    Collections.sort(bestPositions, new CoordComparator());
-    ArrayList<MappedRead> res = new ArrayList<>();
-    MappedRead pivot = bestPositions.get(0);
-    for(int i = 1; i < bestPositions.size(); i++){
-      MappedRead curr = bestPositions.get(i);
-      if(pivot.end > curr.start){
-        // intersection
-        if(pivot.count < curr.count){
-          pivot = curr;
-        }
-      }else{
-        res.add(pivot);
-        pivot = curr;
-      }
-    }
-    res.add(pivot);
-    return res.toArray(new MappedRead[res.size()]);
+    boolean[] isAdjacent = concordanceArray(longHits);
+    Location location = getInitState(contigEnds, read.length, longHits, isAdjacent);
+    return moveWindow(longHits, isAdjacent, contigEnds, location, read.length);
   }
 
 }

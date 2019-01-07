@@ -36,7 +36,7 @@ class MappedRead implements Comparable{
     return read.start == start && read.end == end;
   }
 
-  public void chooseFragment(int[] fragmentEnds){
+  void chooseFragment(int[] fragmentEnds){
     int s = 0;
     int e = 0;
     for(int i = 0; i < fragmentEnds.length; i++){

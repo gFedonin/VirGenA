@@ -475,7 +475,7 @@ class Postprocessor extends Constants{
   }
 
   private ArrayList<RepeatInterval>[] updateIntervals(ArrayList<RepeatInterval>[] intervals){
-    ArrayList<RepeatInterval>[] res = null;
+    ArrayList<RepeatInterval>[] res;
     outer:
     while(true){
       res = new ArrayList[intervals.length];
@@ -517,8 +517,7 @@ class Postprocessor extends Constants{
       for(int i = 0; i < res.length; i++){
         writer.write(selectedRefs[i].name + "\n");
         for(RepeatInterval interval: res[i]){
-          writer.write(Integer.toString(interval.start) + " " +
-              Integer.toString(interval.end) + " " + selectedRefs[interval.assemblyID].name + "\n");
+          writer.write(interval.start + " " + interval.end + " " + selectedRefs[interval.assemblyID].name + "\n");
         }
       }
       writer.close();

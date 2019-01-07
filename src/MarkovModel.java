@@ -96,7 +96,7 @@ public class MarkovModel extends Constants{
     int genomeID = rnd.nextInt(genomes.length);
     String genome = genomes[genomeID];
     int genomePos = rnd.nextInt(genome.length() - K + 1);
-    res.append(genome.substring(genomePos, genomePos + K));
+    res.append(genome, genomePos, genomePos + K);
     for(int j = K; j < len; j++){
       float[] fr = freqs.get(res.substring(j - K, j));
       if(fr == null){

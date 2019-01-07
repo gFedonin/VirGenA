@@ -65,6 +65,9 @@ public class Mapper extends Constants{
     }
 
     private void mapRead(PairedRead read){
+//      if(read.name.equals("700150F:34:HVJVGBCXY:1:1103:17680:52747")){
+//        int a = 0;
+//      }
       MappedRead[] forward1 = mapReadFast(read.seq1, genome);
       MappedRead[] reverse1 = mapReadFast(getComplement(read.seq1), genome);
       MappedRead[] forward2 = mapReadFast(read.seq2, genome);

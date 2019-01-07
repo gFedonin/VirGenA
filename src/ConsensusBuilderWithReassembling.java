@@ -618,7 +618,7 @@ public class ConsensusBuilderWithReassembling extends ConsensusBuilderSimple{
           for(int k = 0; k < contigs.size(); k++){
             byte[] subContig = contigs.get(k);
             String str = new String(subContig);
-            writer.write(">" + fragmentNames[i] + "_" + Integer.toString(k + 1));
+            writer.write(">" + fragmentNames[i] + "_" + (k + 1));
             writer.newLine();
             writer.write(str);
             writer.newLine();
@@ -649,7 +649,7 @@ public class ConsensusBuilderWithReassembling extends ConsensusBuilderSimple{
         writer.newLine();
       }else{
         for(int i = 0; i < contigsNonzero.size(); i++){
-          writer.write(">" + genomeName + "_" + Integer.toString(i + 1));
+          writer.write(">" + genomeName + "_" + (i + 1));
           writer.newLine();
           writer.write(contigsNonzero.get(i));
           writer.newLine();
@@ -740,6 +740,15 @@ public class ConsensusBuilderWithReassembling extends ConsensusBuilderSimple{
 
   void remapReadsToAssembly() throws InterruptedException{
     if(finalConsensus.equals("")){
+      mappedData.unmapped.addAll(mappedData.concordant);
+      mappedData.concordant.clear();
+      mappedData.unmapped.addAll(mappedData.discordant);
+      mappedData.discordant.clear();
+      mappedData.unmapped.addAll(mappedData.leftMateMapped);
+      mappedData.leftMateMapped.clear();
+      mappedData.unmapped.addAll(mappedData.rightMateMapped);
+      mappedData.rightMateMapped.clear();
+      mappedData.mappedReads.clear();
       return;
     }
     Reference genome = new Reference(genomeName, finalConsensus, K, contigEnds, fragmentEnds,

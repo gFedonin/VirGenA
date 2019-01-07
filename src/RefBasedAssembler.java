@@ -248,6 +248,14 @@ public class RefBasedAssembler extends Constants{
     }
   }
 
+  /**
+   * Sort reads mapped to the consensus based on given repeat intervals: reads mapped to repeat interval should be
+   * remapped to different assembly. If only one read in the pair is in the interval - both reads are remapped to
+   * another assembly.
+   * @param intervals a list of repeat intervals for each assembly
+   * @param mappedData structure with mapped reads
+   * @return new structure with mapped reads, some of which are marked for remapping
+   */
   private MappedData[] resortReads(ArrayList<RepeatInterval>[] intervals,
                                    MappedData[] mappedData){
     MappedData[] mappedDataAfterCuts = new MappedData[intervals.length];
@@ -284,10 +292,18 @@ public class RefBasedAssembler extends Constants{
     return mappedDataAfterCuts;
   }
 
+  /**
+   * Cuts sequences corresponding to repeat intervals from repeatIntervals list from the consensus sequence in
+   * consensusBuilder object. Recomputes the contig list and the contig ends coordinates in consensusBuilder. Computes
+   * coordinates mapping from the old to new consensus and store in genomeToAssembly filed in consensusBuilder.
+   * @param consensusBuilder stores the consensus of previous iteration and reads mapped to it.
+   * @param repeatIntervals stores the list of repeat intervals, which should be cut of from the consensus sequence.
+   */
   private void reformatAssembly(ConsensusBuilderWithReassembling consensusBuilder,
                                 ArrayList<RepeatInterval> repeatIntervals){
     byte[] finalConsensus = consensusBuilder.finalConsensus.getBytes();
     if(finalConsensus.length == 0){
+      consensusBuilder.genomeToAssembly = new int[0];
       return;
     }
     int[] coordTransform = new int[finalConsensus.length];
@@ -453,6 +469,15 @@ public class RefBasedAssembler extends Constants{
     }
   }
 
+  /**
+   * Recomputes the consensus sequence using mapped reads from mappedData of consensusBuilder object and current
+   * consensus of consensusBuilder object as a reference.
+   * This may lead to gaps in new consensus. So we need to cut gaps and compute mapping from old reference coordinates
+   * to new.
+   * @param consensusBuilder stores the consensus of previous iteration and reads mapped to it.
+   * @return mapping from old reference coordinates to new ones: gaps are mapped to -1.
+   * @throws InterruptedException
+   */
   private int[] recomputeAssemblyConsensus(ConsensusBuilderWithReassembling consensusBuilder) throws InterruptedException{
 //    Reference genome = new Reference(consensusBuilder.finalConsensus);
     byte[] consensus = consensusBuilder.getConsensusSimple(false, 0, consensusBuilder.finalConsensus.getBytes());
@@ -475,16 +500,18 @@ public class RefBasedAssembler extends Constants{
     }else{
       ArrayList<String> contigs = new ArrayList<>();
       TByteArrayList consensusNew = new TByteArrayList();
-      boolean isGap = true;
+      boolean isGap = false;
       int prev = 0;
       for(int i = 0, j = 0, k = 0; i < consensus.length; i++){
         if(consensus[i] == GAP){
           if(!isGap){
             // gap is started
             isGap = true;
-            contigs.add(consensusBuilder.finalConsensus.substring(prev, i));
+            if(i != 0){
+              contigs.add(consensusBuilder.finalConsensus.substring(prev, i));
+            }
           }
-          res[i] = -100000;
+          res[i] = -1;
         }else{
           if(isGap){
             isGap = false;
@@ -501,7 +528,9 @@ public class RefBasedAssembler extends Constants{
           j++;
         }
       }
-      contigs.add(consensusBuilder.finalConsensus.substring(prev));
+      if(!isGap){
+        contigs.add(consensusBuilder.finalConsensus.substring(prev));
+      }
       consensusBuilder.contigs = contigs.toArray(new String[contigs.size()]);
       consensusBuilder.contigEnds = new int[contigs.size()];
       for(int i = 0, j = 0; i < consensusBuilder.contigs.length; i++){
@@ -540,7 +569,7 @@ public class RefBasedAssembler extends Constants{
       selectedRefs.clear();
       selectedRefs.add(maxRef);
     }
-    if(usePostprocessing){
+    if(usePostprocessing && selectedRefs.size() > 1){
       String[] assemblies = new String[selectedRefs.size()];
       Reference[] selRefs = selectedRefs.toArray(new Reference[assemblies.length]);
       MappedData[] mappedData = new MappedData[assemblies.length];
@@ -567,10 +596,23 @@ public class RefBasedAssembler extends Constants{
       MappedData[] mappedDataAfterCuts = resortReads(intervals, mappedData);
       for(int i = 0; i < assemblies.length; i++){
         ConsensusBuilderWithReassembling cBuilder = cBuilders[i];
+//        System.out.println("Before:");
+//        for(MappedRead mappedRead: cBuilder.mappedData.mappedReads){
+//            System.out.printf("%d %d %d\n", mappedRead.start, mappedRead.end, mappedRead.count);
+//        }
         reformatAssembly(cBuilder, intervals[i]);
+//        System.out.println("New consensus contigs:");
+//        for(String contig: cBuilder.contigs){
+//          System.out.println(contig);
+//        }
+//        System.out.println("New consensus: ");
+//        System.out.println(cBuilder.finalConsensus);
         cBuilder.mappedData = mappedDataAfterCuts[i];
+//        System.out.println("After:");
         for(MappedRead mappedRead : cBuilder.mappedData.mappedReads){
+//          System.out.printf("%d %d %d\n", mappedRead.start, mappedRead.end, mappedRead.count);
           adjustCoord(mappedRead, cBuilder.genomeToAssembly);
+//          System.out.printf("adjusted: %d %d %d\n", mappedRead.start, mappedRead.end, mappedRead.count);
         }
         Reference ref = selRefs[i];
         cBuilder.mapper.mapReads(cBuilder.mappedData, new Reference(cBuilder));
