@@ -1,14 +1,15 @@
-import gnu.trove.iterator.TShortObjectIterator;
-import gnu.trove.list.array.TShortArrayList;
-import gnu.trove.map.hash.TShortObjectHashMap;
+import gnu.trove.iterator.TIntObjectIterator;
+import gnu.trove.list.array.TIntArrayList;
+import gnu.trove.map.hash.TIntObjectHashMap;
 import org.jdom2.Document;
 import org.jdom2.Element;
 
 import java.io.BufferedReader;
-import java.io.DataInputStream;
-import java.io.FileInputStream;
 import java.io.FileReader;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Created by Геннадий on 22.03.2015.
@@ -16,7 +17,7 @@ import java.util.*;
 class ReferenceAlignment extends Constants{
 
   ArrayList<Reference> refAlns;
-  HashMap<String, AlnPos[]> refAlnIndex;
+  HashMap<String, int[]> refAlnIndex;
   HashMap<String, Reference> refSeqs;
   int length;
   int refNum;
@@ -26,18 +27,18 @@ class ReferenceAlignment extends Constants{
 
   private ReferenceAlignment(Document document){
     Element element = document.getRootElement().getChild("ReferenceSelector");
-    String enabled = element.getChildText("Enabled");
-    if(enabled.equals("true") || enabled.equals("True")){
+    boolean enabled = Boolean.parseBoolean(element.getChildText("Enabled"));
+    if(enabled){
       String refAlnPath = element.getChildText("ReferenceMSA");
-      String randomModelPath = element.getChild("MapperToMSA").getChildText("RandomModelPath");
+      int k = Integer.parseInt(element.getChild("MapperToMSA").getChildText("K"));
       threadNum = Integer.parseInt(document.getRootElement().getChildText("ThreadNumber"));
+      if(threadNum == -1){
+        threadNum = Runtime.getRuntime().availableProcessors();
+      }
+      readRefAlns(refAlnPath);
       try{
-        DataInputStream inputStream = new DataInputStream(new FileInputStream(randomModelPath));
-        int k = inputStream.readInt();
-        inputStream.close();
-        readRefAlns(refAlnPath);
         buildAlnIndex(k);
-      }catch(Exception e){
+      }catch(InterruptedException e){
         e.printStackTrace();
       }
     }
@@ -78,21 +79,21 @@ class ReferenceAlignment extends Constants{
       int refID = 0;
       while((line = reader.readLine()) != null){
         if(line.startsWith(">")){
-          Reference seq = new Reference(name, builder.toString());
-          seq.refID = refID;
+          Reference ref = new Reference(name, builder.toString());
+          ref.refID = refID;
           refID++;
-          refAlns.add(seq);
-          refSeqs.put(name, seq);
+          refAlns.add(ref);
+          refSeqs.put(name, ref);
           builder = new StringBuilder();
           name = line.substring(1).replace(' ', '_');
         }else{
           builder.append(line);
         }
       }
-      Reference seq = new Reference(name, builder.toString());
-      seq.refID = refID;
-      refAlns.add(seq);
-      refSeqs.put(name, refAlns.get(refAlns.size() - 1));
+      Reference ref = new Reference(name, builder.toString());
+      ref.refID = refID;
+      refAlns.add(ref);
+      refSeqs.put(name, ref);
     }catch(Exception e){
       e.printStackTrace();
     }
@@ -102,13 +103,13 @@ class ReferenceAlignment extends Constants{
 
   private class AlnIndexBuilder implements Runnable{
 
-    private Reference seq;
-    public short refID;
+    private Reference reference;
+    public int refID;
     public int K;
-    public HashMap<String, TShortArrayList> index;
+    public HashMap<String, TIntArrayList> index;
 
-    public AlnIndexBuilder(short refID, Reference seq, int K){
-      this.seq = seq;
+    AlnIndexBuilder(int refID, Reference reference, int K){
+      this.reference = reference;
       this.refID = refID;
       this.K = K;
     }
@@ -116,19 +117,19 @@ class ReferenceAlignment extends Constants{
     @Override
     public void run(){
       index = new HashMap<>();
-      String str = seq.seq;
-      int[] strToAln = seq.seqToAln;
-      for(short i = 0; i <= str.length() - K; i++){
+      String str = reference.seq;
+      int[] strToAln = reference.seqToAln;
+      for(int i = 0; i <= str.length() - K; i++){
         String s = str.substring(i, i + K);
         if(s.indexOf(GAP) != -1){
           continue;
         }
-        TShortArrayList l = index.get(s);
+        TIntArrayList l = index.get(s);
         if(l == null){
-          l = new TShortArrayList();
+          l = new TIntArrayList();
           index.put(s, l);
         }
-        l.add((short)strToAln[i]);
+        l.add(strToAln[i]);
       }
     }
 
@@ -150,7 +151,7 @@ class ReferenceAlignment extends Constants{
       taskIDs[j] = j;
       thread.start();
     }
-    HashMap<String, TShortObjectHashMap<TShortArrayList>> indexTemp = new HashMap<>();
+    HashMap<String, TIntObjectHashMap<TIntArrayList>> indexTemp = new HashMap<>();
     boolean allComplete = false;
     while(!allComplete){
       allComplete = true;
@@ -160,18 +161,18 @@ class ReferenceAlignment extends Constants{
           if(task.index == null){
             continue;
           }
-          for(Map.Entry<String, TShortArrayList> entry: task.index.entrySet()){
-            TShortObjectHashMap<TShortArrayList> map = indexTemp.get(entry.getKey());
+          for(Map.Entry<String, TIntArrayList> entry: task.index.entrySet()){
+            TIntObjectHashMap<TIntArrayList> map = indexTemp.get(entry.getKey());
             if(map == null){
-              map = new TShortObjectHashMap<>();
+              map = new TIntObjectHashMap<>();
               indexTemp.put(entry.getKey(), map);
             }
-            TShortArrayList list = entry.getValue();
+            TIntArrayList list = entry.getValue();
             for(int k = 0; k < list.size(); k++){
-              short pos = list.getQuick(k);
-              TShortArrayList refList = map.get(pos);
+              int pos = list.getQuick(k);
+              TIntArrayList refList = map.get(pos);
               if(refList == null){
-                refList = new TShortArrayList();
+                refList = new TIntArrayList();
                 map.put(pos, refList);
               }
               refList.add(task.refID);
@@ -190,19 +191,16 @@ class ReferenceAlignment extends Constants{
           allComplete = false;
         }
       }
-      Thread.currentThread().sleep(1);
+      Thread.sleep(1);
     }
     refAlnIndex = new HashMap<>();
-    for(Map.Entry<String, TShortObjectHashMap<TShortArrayList>> entry: indexTemp.entrySet()){
-      TShortObjectHashMap<TShortArrayList> v = entry.getValue();
-      TShortObjectIterator<TShortArrayList> iter = v.iterator();
-      AlnPos[] list = new AlnPos[v.size()];
+    for(Map.Entry<String, TIntObjectHashMap<TIntArrayList>> entry: indexTemp.entrySet()){
+      TIntObjectHashMap<TIntArrayList> v = entry.getValue();
+      TIntObjectIterator<TIntArrayList> iter = v.iterator();
+      int[] list = new int[v.size()];
       for(int j = 0; j < list.length; j++){
         iter.advance();
-        TShortArrayList l = iter.value();
-        list[j] = new AlnPos();
-        list[j].pos = iter.key();
-        list[j].refIDs = l.toArray();
+        list[j] = iter.key();
       }
       Arrays.sort(list);
       refAlnIndex.put(entry.getKey(), list);

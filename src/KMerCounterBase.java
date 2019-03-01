@@ -1,12 +1,9 @@
-import java.io.DataInputStream;
-import java.io.FileInputStream;
-import java.io.IOException;
 import java.util.*;
 
 class KMerCounterBase extends Constants{
 
   int K;
-  String randomReadsCountsPath;
+//  String randomReadsCountsPath;
   float pValue;
   int[] cutoffs;
   float lowCoef;
@@ -193,28 +190,51 @@ class KMerCounterBase extends Constants{
     updateCount(start, end, longHits, location, isAdjacent);
   }
 
-  int[] readRandomModel()
-      throws IOException{
-    DataInputStream inputStream = new DataInputStream(new FileInputStream(randomReadsCountsPath));
-    K = inputStream.readInt();
-    highCoef = inputStream.readFloat();
-    lowCoef = 1/highCoef;
-    int minReadLen = inputStream.readInt();
-    int maxReadLen = inputStream.readInt();
-    int step = inputStream.readInt();
-    int num = inputStream.readInt();
+
+//  void readRandomModel()
+//      throws IOException{
+//    DataInputStream inputStream = new DataInputStream(new FileInputStream(randomReadsCountsPath));
+//    K = inputStream.readInt();
+//    highCoef = inputStream.readFloat();
+//    lowCoef = 1/highCoef;
+//    int minReadLen = inputStream.readInt();
+//    int maxReadLen = inputStream.readInt();
+//    int step = inputStream.readInt();
+//    int num = inputStream.readInt();
+//    int size = (maxReadLen - minReadLen)/step + 1;
+//    int[] cutoffsInterpolation = new int[size];
+//    for(int i = 0; i < size; i++){
+//      int[] counts = new int[num];
+//      for(int j = 0; j < num; j++){
+//        counts[j] = inputStream.readInt();
+//      }
+//      int index = Math.round(num*(1.0f - pValue));
+//      cutoffsInterpolation[i] = counts[index];
+//    }
+//    inputStream.close();
+//    cutoffs = new int[maxReadLen + 1];
+//    for(int i = 0; i < minReadLen; i++){
+//      cutoffs[i] = cutoffsInterpolation[0];
+//    }
+//    for(int i = minReadLen; i < maxReadLen; i++){
+//      int left = (i - minReadLen)/step;
+//      int distToLeft = i - left*step - minReadLen;
+//      int distToRight = step - distToLeft;
+//      cutoffs[i] = (distToRight*cutoffsInterpolation[left] +
+//          distToLeft*cutoffsInterpolation[left + 1])/step;
+//    }
+//    cutoffs[maxReadLen] = cutoffsInterpolation[size - 1];
+//  }
+
+  void computeCuttofs(int minReadLen, int maxReadLen, int step, int[][] counts){
+    int num = counts.length;
     int size = (maxReadLen - minReadLen)/step + 1;
     int[] cutoffsInterpolation = new int[size];
     for(int i = 0; i < size; i++){
-      int[] counts = new int[num];
-      for(int j = 0; j < num; j++){
-        counts[j] = inputStream.readInt();
-      }
       int index = Math.round(num*(1.0f - pValue));
-      cutoffsInterpolation[i] = counts[index];
+      cutoffsInterpolation[i] = counts[i][index];
     }
-    inputStream.close();
-    int[] cutoffs = new int[maxReadLen + 1];
+    cutoffs = new int[maxReadLen + 1];
     for(int i = 0; i < minReadLen; i++){
       cutoffs[i] = cutoffsInterpolation[0];
     }
@@ -226,7 +246,6 @@ class KMerCounterBase extends Constants{
           distToLeft*cutoffsInterpolation[left + 1])/step;
     }
     cutoffs[maxReadLen] = cutoffsInterpolation[size - 1];
-    return cutoffs;
   }
 
   class CoordComparator implements Comparator{
@@ -313,5 +332,156 @@ class KMerCounterBase extends Constants{
     return res.toArray(new MappedRead[res.size()]);
   }
 
+  private LongHit[] mergeHits(int[][] hits){
+    ArrayList<LongHit> longHits = new ArrayList<>();
+    ArrayList<LongHit> currSet = new ArrayList<>();
+    ArrayList<LongHit> nextSet = new ArrayList<>();
+    int firstMatch = 0;
+    do{
+      if(firstMatch == hits.length){
+        return new LongHit[0];
+      }
+      for(int j = 0; j < hits[firstMatch].length; j++){
+        int pos_j = hits[firstMatch][j];
+        LongHit longHit = new LongHit(pos_j, firstMatch);
+        currSet.add(longHit);
+        longHits.add(longHit);
+      }
+      firstMatch ++;
+    }while(currSet.isEmpty());
+    for(int i = firstMatch; i < hits.length; i++){
+      int[] hits_i = hits[i];
+      if(hits_i.length == 0){
+        currSet = new ArrayList<>();
+        nextSet = new ArrayList<>();
+        continue;
+      }
+      if(currSet.size() == 0){
+        for(int pos_j : hits_i){
+          LongHit longHit = new LongHit(pos_j, i);
+          currSet.add(longHit);
+          longHits.add(longHit);
+        }
+        continue;
+      }
+      Iterator<LongHit> iteratorSet = currSet.iterator();
+      LongHit lHit = iteratorSet.next();
+      int j = 0;
+      int rHit = hits_i[j];
+      while(true){
+        // no intersection
+        if(lHit.genomePos + lHit.len + 1 < rHit){
+          //longHits.add(lHit);
+          if(iteratorSet.hasNext()){
+            lHit = iteratorSet.next();
+          }else{
+            LongHit longHit = new LongHit(rHit, i);
+            nextSet.add(longHit);
+            longHits.add(longHit);
+            j++;
+            break;
+          }
+        }else if(lHit.genomePos + lHit.len + 1 > rHit){
+          j++;
+          LongHit longHit = new LongHit(rHit, i);
+          nextSet.add(longHit);
+          longHits.add(longHit);
+          if(j < hits_i.length){
+            rHit = hits_i[j];
+          }else{
+            break;
+          }
+        }else{
+          nextSet.add(lHit);
+          lHit.len++;
+          j++;
+          if(iteratorSet.hasNext()){
+            lHit = iteratorSet.next();
+          }else{
+            break;
+          }
+          if(j < hits_i.length){
+            rHit = hits_i[j];
+          }else{
+            break;
+          }
+        }
+      }
+      while(j < hits_i.length){
+        rHit = hits_i[j];
+        LongHit longHit = new LongHit(rHit, i);
+        nextSet.add(longHit);
+        longHits.add(longHit);
+        j ++;
+      }
+      currSet = nextSet;
+      nextSet = new ArrayList<>();
+    }
+    TreeSet<LongHit> sortedSet = new TreeSet<>(longHits);
+    ArrayList<LongHit> res = new ArrayList<>();
+    LongHit prev = sortedSet.pollFirst();
+    while(!sortedSet.isEmpty()){
+      LongHit curr = sortedSet.pollFirst();
+      if(prev.genomePos + prev.len + K - 1 >= curr.genomePos){
+        if(prev.len < curr.len){
+          prev.len = curr.genomePos - prev.genomePos - K;
+          if(prev.len >= 0){
+            res.add(prev);
+          }
+          prev = curr;
+        }else{
+          int lenDiff = prev.genomePos + prev.len + K - curr.genomePos;
+          curr.len -= lenDiff;
+          if(curr.len >= 0){
+            curr.genomePos += lenDiff;
+            curr.readPos += lenDiff;
+            sortedSet.add(curr);
+          }
+        }
+      }else{
+        res.add(prev);
+        prev = curr;
+      }
+    }
+    res.add(prev);
+    return res.toArray(new LongHit[res.size()]);
+  }
+
+  LongHit[] getHits(String read, HashMap<String, int[]> index){
+    int readLen = read.length();
+    if(readLen < K){
+      return new LongHit[0];
+    }
+    int[][] matches = new int[readLen - K + 1][];
+    for(int i = 0; i <= readLen - K; i++){
+      String s = read.substring(i, i + K);
+      matches[i] = index.get(s);
+      if(matches[i] == null){
+        matches[i] = new int[0];
+      }
+    }
+    return mergeHits(matches);
+  }
+
+  int computeKMerCount(byte[] read, HashMap<String, int[]> index, int from, int to){
+    int readLen = read.length;
+    String readStr = new String(read);
+    LongHit[] matches = getHits(readStr, index);
+    int totalHit = matches.length;
+    if(totalHit == 0){
+      return 0;
+    }
+
+    boolean[] isAdjacent = concordanceArray(matches);
+    Location state = getInitState(from, to, readLen, matches, isAdjacent);
+    int maxCount = state.count;
+    for(int i = 1; i < totalHit; i++){
+      computeCount(from, to, readLen, matches, i, state, isAdjacent);
+      if(state.count > maxCount){
+        maxCount = state.count;
+      }
+    }
+    return maxCount;
+  }
 
 }

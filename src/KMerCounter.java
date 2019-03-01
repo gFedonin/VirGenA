@@ -3,8 +3,6 @@ import org.jdom2.Element;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
-import java.util.TreeSet;
 
 /**
  * Created by Gennady on 06.12.2015.
@@ -16,9 +14,32 @@ class KMerCounter extends KMerCounterBase{
   private KMerCounter(Document document){
     try{
       Element element = document.getRootElement().getChild("Mapper");
-      randomReadsCountsPath = element.getChildText("RandomModelPath");
+      DataReader dataReader = DataReader.getInstance(document);
       pValue = Float.parseFloat(element.getChildText("pValue"));
-      cutoffs = readRandomModel();
+//      randomReadsCountsPath = element.getChildText("RandomModelPath");
+//      if(randomReadsCountsPath.isEmpty()){
+        K = Integer.parseInt(element.getChildText("K"));
+        element = element.getChild("RandomModelParameters");
+//        String outPath = document.getRootElement().getChildText("OutPath");
+        Logger logger = Logger.getInstance(document);
+//        logger.println("No path to random read model found in the config file for <Mapper>. Creating new model with the " +
+//            "parameters given in the config file in <RandomModelParameters> and K = " + scoreK);
+        logger.println("Creating random reads model from reference with the parameters given in the config file in <RandomModelParameters>");
+        RandomModel model = new RandomModel(document);
+//        int minReadLen = Integer.parseInt(element.getChildText("MinReadLen"));
+//        int maxReadLen = Integer.parseInt(element.getChildText("MaxReadLen"));
+        int step = Integer.parseInt(element.getChildText("Step"));
+        int readNum = Integer.parseInt(element.getChildText("ReadNum"));
+//        randomReadsCountsPath = outPath + "random_model.rm";
+//        model.printModel(readNum, minReadLen, maxReadLen, step, randomReadsCountsPath);
+//        logger.println("Random model is created and saved in " + randomReadsCountsPath);
+//        logger.println("You can reuse it in future by providing the path to random_model.rm in <RandomModelPath> in " +
+//            "config file in <Mapper> section. In case then such path is provided, the model parameters in " +
+//            "<RandomModelParameters> section and the K in <Mapper> section are ignored.");
+      model.genModel(readNum, dataReader.minReadLen, dataReader.maxReadLen, step);
+//      }
+//      readRandomModel();
+      computeCuttofs(dataReader.minReadLen, dataReader.maxReadLen, step, model.counts);
     }catch(Exception e){
       e.printStackTrace();
     }
@@ -44,137 +65,6 @@ class KMerCounter extends KMerCounterBase{
       instance = new KMerCounter(K, coef);
     }
     return instance;
-  }
-
-  private LongHit[] mergeHits(int[][] hits){
-    ArrayList<LongHit> longHits = new ArrayList<>();
-    ArrayList<LongHit> currSet = new ArrayList<>();
-    ArrayList<LongHit> nextSet = new ArrayList<>();
-    int firstMatch = 0;
-    do{
-      if(firstMatch == hits.length){
-        return new LongHit[0];
-      }
-      for(int j = 0; j < hits[firstMatch].length; j++){
-        int pos_j = hits[firstMatch][j];
-        LongHit longHit = new LongHit(pos_j, firstMatch);
-        currSet.add(longHit);
-        longHits.add(longHit);
-      }
-      firstMatch ++;
-    }while(currSet.isEmpty());
-    for(int i = firstMatch; i < hits.length; i++){
-      int[] hits_i = hits[i];
-      if(hits_i.length == 0){
-        currSet = new ArrayList<>();
-        nextSet = new ArrayList<>();
-        continue;
-      }
-      if(currSet.size() == 0){
-        for(int pos_j : hits_i){
-          LongHit longHit = new LongHit(pos_j, i);
-          currSet.add(longHit);
-          longHits.add(longHit);
-        }
-        continue;
-      }
-      Iterator<LongHit> iteratorSet = currSet.iterator();
-      LongHit lHit = iteratorSet.next();
-      int j = 0;
-      int rHit = hits_i[j];
-      while(true){
-        // no intersection
-        if(lHit.genomePos + lHit.len + 1 < rHit){
-          //longHits.add(lHit);
-          if(iteratorSet.hasNext()){
-            lHit = iteratorSet.next();
-          }else{
-            LongHit longHit = new LongHit(rHit, i);
-            nextSet.add(longHit);
-            longHits.add(longHit);
-            j++;
-            break;
-          }
-        }else if(lHit.genomePos + lHit.len + 1 > rHit){
-          j++;
-          LongHit longHit = new LongHit(rHit, i);
-          nextSet.add(longHit);
-          longHits.add(longHit);
-          if(j < hits_i.length){
-            rHit = hits_i[j];
-          }else{
-            break;
-          }
-        }else{
-          nextSet.add(lHit);
-          lHit.len++;
-          j++;
-          if(iteratorSet.hasNext()){
-            lHit = iteratorSet.next();
-          }else{
-            break;
-          }
-          if(j < hits_i.length){
-            rHit = hits_i[j];
-          }else{
-            break;
-          }
-        }
-      }
-      while(j < hits_i.length){
-        rHit = hits_i[j];
-        LongHit longHit = new LongHit(rHit, i);
-        nextSet.add(longHit);
-        longHits.add(longHit);
-        j ++;
-      }
-      currSet = nextSet;
-      nextSet = new ArrayList<>();
-    }
-    TreeSet<LongHit> sortedSet = new TreeSet<>(longHits);
-    ArrayList<LongHit> res = new ArrayList<>();
-    LongHit prev = sortedSet.pollFirst();
-    while(!sortedSet.isEmpty()){
-      LongHit curr = sortedSet.pollFirst();
-      if(prev.genomePos + prev.len + K - 1 >= curr.genomePos){
-        if(prev.len < curr.len){
-          prev.len = curr.genomePos - prev.genomePos - K;
-          if(prev.len >= 0){
-            res.add(prev);
-          }
-          prev = curr;
-        }else{
-          int lenDiff = prev.genomePos + prev.len + K - curr.genomePos;
-          curr.len -= lenDiff;
-          if(curr.len >= 0){
-            curr.genomePos += lenDiff;
-            curr.readPos += lenDiff;
-            sortedSet.add(curr);
-          }
-        }
-      }else{
-        res.add(prev);
-        prev = curr;
-      }
-    }
-    res.add(prev);
-    return res.toArray(new LongHit[res.size()]);
-  }
-
-  private LongHit[] getHits(String read, HashMap<String, int[]> index){
-    int readLen = read.length();
-    if(readLen < K){
-      return new LongHit[0];
-    }
-    int[][] matches = new int[readLen - K + 1][];
-    for(int i = 0; i <= readLen - K; i++){
-      String s = read.substring(i, i + K);
-      matches[i] = index.get(s);
-      if(matches[i] == null){
-        matches[i] = new int[0];
-      }
-    }
-    return mergeHits(matches);
   }
 
 
@@ -224,26 +114,6 @@ class KMerCounter extends KMerCounterBase{
     return res;
   }
 
-  int computeKMerCount(byte[] read, HashMap<String, int[]> index, int from, int to){
-    int readLen = read.length;
-    String readStr = new String(read);
-    LongHit[] matches = getHits(readStr, index);
-    int totalHit = matches.length;
-    if(totalHit == 0){
-      return 0;
-    }
-
-    boolean[] isAdjacent = concordanceArray(matches);
-    Location state = getInitState(from, to, readLen, matches, isAdjacent);
-    int maxCount = state.count;
-    for(int i = 1; i < totalHit; i++){
-      computeCount(from, to, readLen, matches, i, state, isAdjacent);
-      if(state.count > maxCount){
-        maxCount = state.count;
-      }
-    }
-    return maxCount;
-  }
 
   MappedRead mapReadToRegion(byte[] read, HashMap<String, int[]> index, int from, int to){
     int readLen = read.length;

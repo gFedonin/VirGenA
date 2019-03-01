@@ -759,9 +759,9 @@ public class ConsensusBuilderWithReassembling extends ConsensusBuilderSimple{
 
   public void assemble(Document jdomDocument) throws IOException, InterruptedException{
     long time = System.currentTimeMillis();
-    DataReader dataReader = new DataReader(jdomDocument);
+    DataReader dataReader = DataReader.getInstance(jdomDocument);
     Reference genome = new Reference(jdomDocument);
-    ArrayList<PairedRead> reads = dataReader.readFilesWithReads();
+    ArrayList<PairedRead> reads = dataReader.pairedReads;
     String finalConsensus = buildConsensus(genome, reads);
     if(finalConsensus.equals("")){
       printAssembly("assembly.fasta");

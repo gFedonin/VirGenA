@@ -28,6 +28,9 @@ class Postprocessor extends Constants{
       minLen = Integer.parseInt(element.getChildText("MinFragmentLength"));
       minIdentity = Float.parseFloat(element.getChildText("MinIdentity"));
       threadNum = Integer.parseInt(document.getRootElement().getChildText("ThreadNumber"));
+      if(threadNum == -1){
+        threadNum = Runtime.getRuntime().availableProcessors();
+      }
       minCoverage = Float.parseFloat(element.getChildText("MinFragmentCoverage"));
     }
   }

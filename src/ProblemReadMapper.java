@@ -23,6 +23,9 @@ abstract class ProblemReadMapper extends Constants{
     Element element = document.getRootElement().getChild("ConsensusBuilder").getChild("Reassembler");
     debug = Boolean.parseBoolean(element.getChildText("Debug"));
     threadNum = Integer.parseInt(document.getRootElement().getChildText("ThreadNumber"));
+    if(threadNum == -1){
+      threadNum = Runtime.getRuntime().availableProcessors();
+    }
   }
 
   void init(ArrayList<ProblemRead> problemReads, KMerCounter counter, Aligner aligner,

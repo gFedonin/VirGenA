@@ -1,4 +1,5 @@
 import gnu.trove.list.array.TIntArrayList;
+import net.sourceforge.argparse4j.inf.Namespace;
 import org.jdom2.Document;
 
 import java.io.BufferedReader;
@@ -97,6 +98,35 @@ public class Reference extends Constants{
   public Reference(Document document){
     String pathToGenome = document.getRootElement().getChildText("Reference");
     int threadNum = Integer.parseInt(document.getRootElement().getChildText("ThreadNumber"));
+    if(threadNum == -1){
+      threadNum = Runtime.getRuntime().availableProcessors();
+    }
+    try{
+      readGenome(pathToGenome);
+      index = StringIndexer.buildIndexPara(seq, KMerCounter.getInstance(document).K, threadNum);
+    }catch(Exception e){
+      e.printStackTrace();
+    }
+  }
+
+  public Reference(Document document, Namespace parsedArgs) throws Exception{
+    String pathToGenome = parsedArgs.getString("reference");
+    if(pathToGenome == null){
+      pathToGenome = document.getRootElement().getChildText("Reference");
+      if(pathToGenome.isEmpty()){
+        throw new Exception("No reference specified! Add path ot the config file or use -r option!");
+      }
+    }
+    String threadNumStr = parsedArgs.getString("thread_num");
+    int threadNum;
+    if(threadNumStr == null){
+      threadNum = Integer.parseInt(document.getRootElement().getChildText("ThreadNumber"));
+    }else{
+      threadNum = Integer.parseInt(threadNumStr);
+    }
+    if(threadNum == -1){
+      threadNum = Runtime.getRuntime().availableProcessors();
+    }
     try{
       readGenome(pathToGenome);
       index = StringIndexer.buildIndexPara(seq, KMerCounter.getInstance(document).K, threadNum);
@@ -109,6 +139,9 @@ public class Reference extends Constants{
     length = seq.length();
     seqB = seq.getBytes();
     int threadNum = Integer.parseInt(document.getRootElement().getChildText("ThreadNumber"));
+    if(threadNum == -1){
+      threadNum = Runtime.getRuntime().availableProcessors();
+    }
     try{
       index = StringIndexer.buildIndexPara(seq, KMerCounter.getInstance(document).K, threadNum);
     }catch (Exception e){

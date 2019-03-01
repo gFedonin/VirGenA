@@ -1,3 +1,8 @@
+import net.sourceforge.argparse4j.ArgumentParsers;
+import net.sourceforge.argparse4j.inf.ArgumentGroup;
+import net.sourceforge.argparse4j.inf.ArgumentParser;
+import net.sourceforge.argparse4j.inf.ArgumentParserException;
+import net.sourceforge.argparse4j.inf.Namespace;
 import org.jdom2.Document;
 import org.jdom2.input.SAXBuilder;
 
@@ -25,6 +30,26 @@ public class Mapper extends Constants{
     logger = Logger.getInstance(document);
     insertLen = Integer.parseInt(document.getRootElement().getChild("Data").getChildText("InsertionLength"));
     threadNum = Integer.parseInt(document.getRootElement().getChildText("ThreadNumber"));
+    if(threadNum == -1){
+      threadNum = Runtime.getRuntime().availableProcessors();
+    }
+    batchSize = Integer.parseInt(document.getRootElement().getChildText("BatchSize"));
+  }
+
+  Mapper(Document document, Namespace parsedArgs){
+    aligner = new SmithWatermanGotoh(document);
+    counter = KMerCounter.getInstance(document);
+    logger = Logger.getInstance(document);
+    insertLen = Integer.parseInt(document.getRootElement().getChild("Data").getChildText("InsertionLength"));
+    String n = parsedArgs.getString("thread_num");
+    if(n == null){
+      threadNum = Integer.parseInt(document.getRootElement().getChildText("ThreadNumber"));
+    }else{
+      threadNum = Integer.parseInt(n);
+    }
+    if(threadNum == -1){
+      threadNum = Runtime.getRuntime().availableProcessors();
+    }
     batchSize = Integer.parseInt(document.getRootElement().getChildText("BatchSize"));
   }
 
@@ -510,34 +535,56 @@ public class Mapper extends Constants{
         (float) totalScore / totalMapped);
   }
 
-  private static void printUsage(){
-    System.out.println("Usage: java -cp ./VirGenA.jar Mapper pathToConfigFile");
+  static void addParameters(ArgumentParser parser){
+    parser.description("This tool will map paired reads " +
+        "to given reference sequence. The resulting sorted and indexed BAM file 'mapped_reads.bam' will be created in " +
+        "the given output folder along with 'mapped_reads.bai' and log file.");
+    parser.addArgument("-c").dest("config_file").help("Path to config file").required(true);
+    ArgumentGroup fileGroup = parser.addArgumentGroup("Input files").description("Paths to fastq files with reads to map. " +
+        "May be gzipped. If present, the same paths in config file are ignored.");
+    fileGroup.addArgument("-p1").dest("pair1").help("Path to the first paired read file or a list of comma separated files");
+    fileGroup.addArgument("-p2").dest("pair2").help("Path to the second paired read file or a list of comma separated files");
+    parser.addArgument("-r").dest("reference").help("Path to the reference FASTA file");
+    parser.addArgument("-o").dest("output_path").help("The output folder. Intermediate folders will be " +
+        "created if not exists. Of present, the output path in config file will be ignored. If not - 'mapped_reads.bam' will be " +
+        "created in the output dir from config file. Default output dir is current dir.");
+    parser.addArgument("-n").dest("thread_num").help("Number of threads to use, set to -1 to use all available processors. " +
+        "If not specified - the value from config file will be used.");
+  }
+
+  static void run(Namespace parsedArgs){
+    try{
+//      Namespace parsedArgs = parser.parseArgs(args);
+      SAXBuilder jdomBuilder = new SAXBuilder();
+      Document jdomDocument = jdomBuilder.build(parsedArgs.getString("config_file"));
+      long time = System.currentTimeMillis();
+      DataReader dataReader = DataReader.getInstance(jdomDocument, parsedArgs);
+      Mapper mapper = new Mapper(jdomDocument, parsedArgs);
+      Reference genome = new Reference(jdomDocument, parsedArgs);
+      MappedData mappedData = mapper.mapReads(dataReader.pairedReads, genome);
+      mapper.logger.printf("Time: %d, s\n", (System.currentTimeMillis() - time) / 1000);
+      BamPrinter bamPrinter = new BamPrinter();
+      String outPath = parsedArgs.getString("output_dir");
+      if(outPath == null){
+        outPath = jdomDocument.getRootElement().getChildText("OutPath");
+        if(outPath.isEmpty()){
+          outPath = System.getProperty("user.dir");
+        }
+      }
+      bamPrinter.printBAM(mappedData, genome, outPath + "mapped_reads.bam");
+    }catch(Exception e){
+      e.printStackTrace();
+    }
   }
 
   public static void main(String[] args){
+    ArgumentParser parser = ArgumentParsers.newFor("Mapper").build();
+    addParameters(parser);
     try{
-      if(args.length == 0 || args[0].equals("-h")){
-        printUsage();
-        return;
-      }
-      if(args.length != 1){
-        System.out.println("Wrong parameter number!");
-        printUsage();
-        return;
-      }
-      SAXBuilder jdomBuilder = new SAXBuilder();
-      Document jdomDocument = jdomBuilder.build(args[0]);
-      Mapper mapper = new Mapper(jdomDocument);
-      DataReader dataReader = new DataReader(jdomDocument);
-      long time = System.currentTimeMillis();
-      Reference genome = new Reference(jdomDocument);
-      MappedData mappedData = mapper.mapReads(dataReader.readFilesWithReads(), genome);
-      mapper.logger.printf("Time: %d, s\n", (System.currentTimeMillis() - time) / 1000);
-      BamPrinter bamPrinter = new BamPrinter();
-      String bamPath = jdomDocument.getRootElement().getChildText("OutPath") + "mapped_reads.bam";
-      bamPrinter.printBAM(mappedData, genome, bamPath);
-    }catch(Exception e){
-      e.printStackTrace();
+      Namespace parsedArgs = parser.parseArgs(args);
+      run(parsedArgs);
+    }catch(ArgumentParserException e){
+      parser.handleError(e);
     }
   }
 

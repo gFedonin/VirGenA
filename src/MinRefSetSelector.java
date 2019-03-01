@@ -46,6 +46,9 @@ class MinRefSetSelector extends Constants{
     refAlignment = ReferenceAlignment.getInstance(document);
     logger = Logger.getInstance(document);
     threadNum = Integer.parseInt(document.getRootElement().getChildText("ThreadNumber"));
+    if(threadNum == -1){
+      threadNum = Runtime.getRuntime().availableProcessors();
+    }
   }
 
   private class Score implements Comparable{

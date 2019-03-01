@@ -6,21 +6,27 @@
     </Data>
     <Reference>Path to the default reference in FASTA format</Reference>
     <OutPath>Output path</OutPath>
-    <ThreadNumber>32</ThreadNumber>
+    <ThreadNumber>-1</ThreadNumber>
 	<BatchSize>1000</BatchSize>
     <ReferenceSelector>
-		<Enabled>true</Enabled>
+		<Enabled>false</Enabled>
         <UseMajor>false</UseMajor>
         <ReferenceMSA>Path to reference MSA in FASTA format</ReferenceMSA>
-        <PathToUsearch>Path usearch executable</PathToUsearch>
+        <PathToUsearch>Path vsearch executable</PathToUsearch>
         <UclustIdentity>0.95</UclustIdentity>
         <MinReadLength>50</MinReadLength>
         <MinContigLength>1000</MinContigLength>
         <Delta>0.05</Delta>
 		<MaxNongreedyComponentNumber>5</MaxNongreedyComponentNumber>
         <MapperToMSA>
-            <RandomModelPath>Path to the random MSA model</RandomModelPath>
-            <pValue>0.01</pValue>
+			<K>7</K>
+			<pValue>0.01</pValue>
+			<RandomModelParameters>
+				<Order>4</Order>
+				<IndelToleranceThreshold>1.5</IndelToleranceThreshold>
+				<ReadNum>1000</ReadNum>
+				<Step>10</Step>
+			</RandomModelParameters>
         </MapperToMSA>
         <Graph>
             <MinReadNumber>5</MinReadNumber>
@@ -31,8 +37,14 @@
         <Debug>false</Debug>
     </ReferenceSelector>
     <Mapper>
-        <RandomModelPath>Path to the random model</RandomModelPath>
+		<K>5</K>
         <pValue>0.01</pValue>
+		<RandomModelParameters>
+			<Order>4</Order>
+			<IndelToleranceThreshold>1.25</IndelToleranceThreshold>
+			<ReadNum>1000</ReadNum>
+			<Step>10</Step>
+		</RandomModelParameters>
         <Aligner>
             <Match>2</Match>
             <Mismatch>-3</Mismatch>

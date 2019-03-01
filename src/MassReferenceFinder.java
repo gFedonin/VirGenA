@@ -18,7 +18,7 @@ public class MassReferenceFinder{
     System.out.println("Usage: java -cp ./ViRGA.jar MassReferenceFinder [Options]");
     System.out.println("Options:");
     System.out.println("-config path to config file");
-    System.out.println("-in path to folder with data, default ./");
+    System.out.println("-in path to folder with pairedReads, default ./");
     System.out.println("-out path to output folder, default ./ref_asm/");
     System.out.println("-list path to the list of samples - a subset of files in the input " +
         "folder, one sample ID per file line, each sample ID should be the prefix of two file names " +
@@ -139,8 +139,8 @@ public class MassReferenceFinder{
         config.getRootElement().getChild("OutPath").setText(pathToOutFolder +
             sampleID + "/");
         ReferenceFinder assembler = new ReferenceFinder(config);
-        DataReader dataReader = new DataReader(config);
-        assembler.selectReferences(dataReader.readFilesWithReads());
+        DataReader dataReader = DataReader.getInstance(config);
+        assembler.selectReferences(dataReader.pairedReads);
       }
     }catch(Exception e){
       e.printStackTrace();

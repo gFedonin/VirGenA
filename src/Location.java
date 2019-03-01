@@ -2,7 +2,7 @@
  * Created with IntelliJ IDEA.
  * Date: 07.08.15
  */
-class Location extends Interval{
+class Location extends Interval implements Comparable{
 
   int startIndex;
   int endIndex;
@@ -20,4 +20,15 @@ class Location extends Interval{
     count = st.count;
   }
 
+  @Override
+  public int compareTo(Object o){
+    Location l = (Location) o;
+    if(start == l.start){
+      if(end == l.end){
+        return 0;
+      }
+      return (end < l.end)?-1:1;
+    }
+    return (start < l.start)?-1:1;
+  }
 }

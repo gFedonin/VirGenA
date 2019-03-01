@@ -18,7 +18,7 @@ public class MassRefBasedAssembler{
     System.out.println("Usage: java -cp ./ViRGA.jar MassRefBasedAssembler [Options]");
     System.out.println("Options:");
     System.out.println("-config path to config file");
-    System.out.println("-in path to folder with data, default ./");
+    System.out.println("-in path to folder with pairedReads, default ./");
     System.out.println("-out path to output folder, default ./ref_asm/");
     System.out.println("-list path to the list of samples - a subset of files in the input " +
         "folder, one sample ID per file line, each sample ID should be the prefix of two file names " +
@@ -188,7 +188,7 @@ public class MassRefBasedAssembler{
                       alignmentDone++;
                     }
                   }
-                  if(assemblyDone != refNum || alignmentDone != refNum){
+                  if(assemblyDone == 0 || assemblyDone < refNum || alignmentDone < refNum){
                     repeat = true;
                   }
                 }

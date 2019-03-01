@@ -1,8 +1,10 @@
+import net.sourceforge.argparse4j.inf.Namespace;
 import org.jdom2.Document;
 import org.jdom2.Element;
 
 import java.io.*;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -21,9 +23,99 @@ class DataReader extends Constants {
   private String[] pathToReads1;
   private String[] pathToReads2;
 
-  public DataReader(String pathToReadsP1, String pathToReadsP2){
-    this.pathToReadsP1 = pathToReadsP1;
-    this.pathToReadsP2 = pathToReadsP2;
+  private static DataReader instance;
+
+  public ArrayList<PairedRead> pairedReads;
+  public int minReadLen;
+  public int maxReadLen;
+
+//  private DataReader(String pathToReadsP1, String pathToReadsP2){
+//    this.pathToReadsP1 = pathToReadsP1;
+//    this.pathToReadsP2 = pathToReadsP2;
+//  }
+
+  private void readData() throws IOException{
+    if(pathToReads1 != null){
+      pairedReads = readFilesWithReads(pathToReads1, pathToReads2);
+    }else{
+      pairedReads = readFilesWithReads(pathToReadsP1, pathToReadsP2);
+    }
+    minReadLen = Integer.MAX_VALUE;
+    maxReadLen = 0;
+    for(PairedRead read: pairedReads){
+      if(!Arrays.equals(read.seq1, NULL_SEQ)){
+        if(read.seq1.length < minReadLen){
+          minReadLen = read.seq1.length;
+        }
+        if(read.seq1.length > maxReadLen){
+          maxReadLen = read.seq1.length;
+        }
+      }
+      if(!Arrays.equals(read.seq2, NULL_SEQ)){
+        if(read.seq2.length < minReadLen){
+          minReadLen = read.seq2.length;
+        }
+        if(read.seq2.length > maxReadLen){
+          maxReadLen = read.seq2.length;
+        }
+      }
+    }
+  }
+
+  private DataReader(Document document) throws IOException{
+    Element element = document.getRootElement().getChild("Data");
+    pathToReadsP1 = element.getChildText("pathToReads1");
+    pathToReadsP2 = element.getChildText("pathToReads2");
+    String[] paths1 = pathToReadsP1.split(",");
+    String[] paths2 = pathToReadsP2.split(",");
+    if(paths1.length > 1 || paths2.length > 1){
+      pathToReads1 = paths1;
+      pathToReads2 = paths1;
+    }
+    readData();
+  }
+
+  private DataReader(Document document, Namespace parsedArgs) throws Exception{
+    pathToReadsP1 = parsedArgs.getString("pair1");
+    pathToReadsP2 = parsedArgs.getString("pair2");
+    if(pathToReadsP1 == null && pathToReadsP2 == null){
+      Element element = document.getRootElement().getChild("Data");
+      pathToReadsP1 = element.getChildText("pathToReads1");
+      pathToReadsP2 = element.getChildText("pathToReads2");
+    }else{
+      if(pathToReadsP1 == null || pathToReadsP2 == null){
+        throw new Exception("Both pair1 and pair2 should be specified or none of them!");
+      }
+    }
+    String[] paths1 = pathToReadsP1.split(",");
+    String[] paths2 = pathToReadsP2.split(",");
+    if(paths1.length > 1 || paths2.length > 1){
+      pathToReads1 = paths1;
+      pathToReads2 = paths1;
+    }
+    readData();
+  }
+
+  public static DataReader getInstance(Document document){
+    if(instance == null){
+      try{
+        instance = new DataReader(document);
+      }catch(IOException e){
+        e.printStackTrace();
+      }
+    }
+    return instance;
+  }
+
+  public static DataReader getInstance(Document document, Namespace parsedArgs){
+    if(instance == null){
+      try{
+        instance = new DataReader(document, parsedArgs);
+      }catch(Exception e){
+        e.printStackTrace();
+      }
+    }
+    return instance;
   }
 
   private static BufferedReader newReadsReader(String path) throws IOException {
@@ -32,15 +124,6 @@ class DataReader extends Constants {
       is = new GZIPInputStream(is, 65536);
     }
     return new BufferedReader(new InputStreamReader(is), 32768);
-  }
-
-
-  ArrayList<PairedRead> readFilesWithReads() throws IOException {
-    if(pathToReads1 != null){
-      return readFilesWithReads(pathToReads1, pathToReads2);
-    }else{
-      return readFilesWithReads(pathToReadsP1, pathToReadsP2);
-    }
   }
 
   private ArrayList<PairedRead> readFilesWithReads(String pathToReadsP1,
@@ -161,16 +244,5 @@ class DataReader extends Constants {
   }
 
 
-  DataReader(Document document) {
-    Element element = document.getRootElement().getChild("Data");
-    pathToReadsP1 = element.getChildText("pathToReads1");
-    pathToReadsP2 = element.getChildText("pathToReads2");
-    String[] paths1 = pathToReadsP1.split(",");
-    String[] paths2 = pathToReadsP2.split(",");
-    if(paths1.length > 1 || paths2.length > 1){
-      pathToReads1 = paths1;
-      pathToReads2 = paths1;
-    }
-  }
 
 }

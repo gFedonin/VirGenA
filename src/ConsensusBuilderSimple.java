@@ -22,6 +22,9 @@ class ConsensusBuilderSimple extends ConsensusBuilder{
     coverageThreshold = Integer.parseInt(element.getChildText("CoverageThreshold"));
     mapper = new Mapper(document);
     threadNum = Integer.parseInt(document.getRootElement().getChildText("ThreadNumber"));
+    if(threadNum == -1){
+      threadNum = Runtime.getRuntime().availableProcessors();
+    }
   }
 
   @Override

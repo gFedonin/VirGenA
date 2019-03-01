@@ -294,7 +294,9 @@ class Graph extends Constants{
     aligner = new SmithWatermanGotoh(document);
     counter = KMerCounter.getInstance(document);
     threadNum = Integer.parseInt(document.getRootElement().getChildText("ThreadNumber"));
-
+    if(threadNum == -1){
+      threadNum = Runtime.getRuntime().availableProcessors();
+    }
     // merge vertices with reads as centroids to some vertices with reference centroids
     assignReferencesToClusters(clusters);
 

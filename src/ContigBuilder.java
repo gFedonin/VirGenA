@@ -31,6 +31,9 @@ class ContigBuilder extends Constants{
     K = counter.K;
     refAlignment = ReferenceAlignment.getInstance(document);
     threadNum = Integer.parseInt(document.getRootElement().getChildText("ThreadNumber"));
+    if(threadNum == -1){
+      threadNum = Runtime.getRuntime().availableProcessors();
+    }
   }
 
   private void buildContigAln(Cluster cluster){

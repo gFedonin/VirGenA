@@ -1,5 +1,9 @@
 import gnu.trove.list.array.TByteArrayList;
 import gnu.trove.list.array.TIntArrayList;
+import net.sourceforge.argparse4j.ArgumentParsers;
+import net.sourceforge.argparse4j.inf.ArgumentParser;
+import net.sourceforge.argparse4j.inf.ArgumentParserException;
+import net.sourceforge.argparse4j.inf.Namespace;
 import org.jdom2.Document;
 import org.jdom2.JDOMException;
 import org.jdom2.input.SAXBuilder;
@@ -34,7 +38,7 @@ public class RefBasedAssembler extends Constants{
     if(!out.exists()){
       out.mkdirs();
     }
-    dataReader = new DataReader(document);
+    dataReader = DataReader.getInstance(document);
     usePostprocessing = Boolean.parseBoolean(
         document.getRootElement().getChild("Postprocessor").getChildText("Enabled"));
     postprocessor = new Postprocessor(document);
@@ -544,7 +548,7 @@ public class RefBasedAssembler extends Constants{
 
   public void assemble() throws IOException, InterruptedException, InvocationTargetException, InstantiationException, IllegalAccessException, JDOMException{
     long time = System.currentTimeMillis();
-    ArrayList<PairedRead> reads = dataReader.readFilesWithReads();
+    ArrayList<PairedRead> reads = dataReader.pairedReads;
     ArrayList<Reference> selectedRefs = refFinder.selectReferences(reads);
     if(selectedRefs.size() == 0){
       Reference genome = new Reference(document);
@@ -639,23 +643,19 @@ public class RefBasedAssembler extends Constants{
     logger.println("Total time: " + (System.currentTimeMillis() - time)/1000);
   }
 
-  private static void printUsage(){
-    System.out.println("Usage: java -cp ./VirGenA.jar RefBasedAssembler pathToConfigFile");
+
+  static void addParameters(ArgumentParser parser){
+    parser.description("This tool will " +
+        "assemble one or more genome sequences from given paired reads using given reference or a set of aligned reference " +
+        "sequences. All the parameters should be provided in the config file. The results, including assemblies, sorted " +
+        "and indexed BAM files and log file, will appear in the output folder from config file.");
+    parser.addArgument("-c").dest("config_file").help("Path to config file").required(true);
   }
 
-  public static void main(String[] args){
+  static void run(Namespace parsedArgs){
     try{
       SAXBuilder jdomBuilder = new SAXBuilder();
-      if(args.length == 0 || args[0].equals("-h")){
-        printUsage();
-        return;
-      }
-      if(args.length != 1){
-        System.out.println("Wrong parameter number!");
-        printUsage();
-        return;
-      }
-      Document config = jdomBuilder.build(args[0]);
+      Document config = jdomBuilder.build(parsedArgs.getString("config_file"));
       boolean selectRefs = Boolean.parseBoolean(
           config.getRootElement().getChild("ReferenceSelector").getChildText("Enabled"));
       if(selectRefs){
@@ -667,6 +667,21 @@ public class RefBasedAssembler extends Constants{
       }
     }catch(Exception e){
       e.printStackTrace();
+    }
+  }
+
+  public static void main(String[] args){
+    ArgumentParser parser = ArgumentParsers.newFor("RefBasedAssembler").build();
+    addParameters(parser);
+    if(args.length == 0){
+      parser.printUsage();
+      return;
+    }
+    try{
+      Namespace parsedArgs = parser.parseArgs(args);
+      run(parsedArgs);
+    }catch(ArgumentParserException e){
+      parser.handleError(e);
     }
   }
 

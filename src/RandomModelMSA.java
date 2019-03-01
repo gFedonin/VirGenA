@@ -1,4 +1,9 @@
-import java.io.*;
+import org.jdom2.Document;
+import org.jdom2.Element;
+
+import java.io.DataOutputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -11,10 +16,27 @@ public class RandomModelMSA{
 
   private KMerCounterMSA counter;
   private int threadNum;
-  private ReferenceAlignment referenceAlignment;
   private int scoreK;
   private int modelK;
   private float coef;
+  int[][] counts;
+  private ReferenceAlignment referenceAlignment;
+
+  RandomModelMSA(Document config){
+    Element root = config.getRootElement();
+    threadNum = Integer.parseInt(root.getChildText("ThreadNumber"));
+    if(threadNum == -1){
+      threadNum = Runtime.getRuntime().availableProcessors();
+    }
+    Element elem = root.getChild("ReferenceSelector");
+    String pathToMSA = elem.getChildText("ReferenceMSA");
+    scoreK = Integer.parseInt(elem.getChild("MapperToMSA").getChildText("K"));
+    elem = elem.getChild("MapperToMSA").getChild("RandomModelParameters");
+    modelK = Integer.parseInt(elem.getChildText("Order"));
+    coef = Float.parseFloat(elem.getChildText("IndelToleranceThreshold"));
+    counter = KMerCounterMSA.getInstance(scoreK, coef);
+    referenceAlignment = ReferenceAlignment.getInstance(scoreK, pathToMSA, threadNum);
+  }
 
   RandomModelMSA(String pathToMSA, int scoreK, int modelK, float coef, int threadNum){
     this.threadNum = threadNum;
@@ -49,6 +71,22 @@ public class RandomModelMSA{
       }
     }
     outputStream.close();
+  }
+
+  void genModel(int readNum, int minReadLen,
+                  int maxReadLen, int step)
+      throws InterruptedException{
+    int size = (maxReadLen - minReadLen)/step + 1;
+    counts = new int[size][readNum];
+    String[] genomes = new String[referenceAlignment.refAlns.size()];
+    for(int i = 0; i < genomes.length; i++){
+      genomes[i] = referenceAlignment.refAlns.get(i).seq;
+    }
+    MarkovModel model = new MarkovModel(genomes, modelK);
+    for(int len = maxReadLen, i = size - 1; i >= 0; len -= step, i--){
+//      System.out.println("RandomModel len = " + len);
+      genRandomScores(model, counts[i], len);
+    }
   }
 
   private class RandomCountsComputing implements Runnable{

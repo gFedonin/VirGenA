@@ -21,6 +21,9 @@ class MapperMSA extends Constants{
     logger = Logger.getInstance(document);
     insertLen = Integer.parseInt(document.getRootElement().getChild("Data").getChildText("InsertionLength"));
     threadNum = Integer.parseInt(document.getRootElement().getChildText("ThreadNumber"));
+    if(threadNum == -1){
+      threadNum = Runtime.getRuntime().availableProcessors();
+    }
     batchSize = Integer.parseInt(document.getRootElement().getChildText("BatchSize"));
   }
 

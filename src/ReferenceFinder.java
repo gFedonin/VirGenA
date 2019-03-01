@@ -1,13 +1,19 @@
 import gnu.trove.iterator.TIntIterator;
 import gnu.trove.list.array.TIntArrayList;
 import gnu.trove.map.hash.TObjectIntHashMap;
+import net.sourceforge.argparse4j.ArgumentParsers;
+import net.sourceforge.argparse4j.inf.ArgumentParser;
+import net.sourceforge.argparse4j.inf.ArgumentParserException;
+import net.sourceforge.argparse4j.inf.Namespace;
 import org.jdom2.Document;
 import org.jdom2.Element;
 import org.jdom2.input.SAXBuilder;
 
 import java.io.*;
-import java.lang.reflect.InvocationTargetException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -47,11 +53,15 @@ public class ReferenceFinder extends Constants{
   private int threadNum;
 
   boolean debug;
+  private DebugPrinter debugPrinter;
 
   ReferenceFinder(Document document){
     config = document;
     Element rsElement = document.getRootElement().getChild("ReferenceSelector");
     debug = Boolean.parseBoolean(rsElement.getChildText("Debug"));
+    if(debug){
+      debugPrinter = DebugPrinter.getInstance(document);
+    }
     uclustIdentity = Float.parseFloat(rsElement.getChildText("UclustIdentity"));
     outPath = document.getRootElement().getChildText("OutPath");
     pathToUclust = rsElement.getChildText("PathToUsearch");
@@ -64,6 +74,9 @@ public class ReferenceFinder extends Constants{
     counter = KMerCounter.getInstance(document);
     aligner = new SmithWatermanGotoh(document);
     threadNum = Integer.parseInt(document.getRootElement().getChildText("ThreadNumber"));
+    if(threadNum == -1){
+      threadNum = Runtime.getRuntime().availableProcessors();
+    }
     batchSize = Integer.parseInt(document.getRootElement().getChildText("BatchSize"));
   }
 
@@ -104,7 +117,7 @@ public class ReferenceFinder extends Constants{
         int k = readGroups[i].getQuick(j);
         MappedRead read = mappedData.mappedReads.get(k);
         if(read.seq.length >= minLen){
-          writer.write(">Read_" + Integer.toString(k) + "\n");
+          writer.write(">Read_" + k + "\n");
           writer.write(new String(read.seq) + "\n");
         }
       }
@@ -127,7 +140,7 @@ public class ReferenceFinder extends Constants{
         int start = windowID*winStep;
         int end = start + windowLen;
         Process p = Runtime.getRuntime().exec(pathToUclust + " -threads 1 -sort length" +
-            " -cluster_fast " + outPath + start + "_" + end + "_reads.fasta -id " + Float.toString(uclustIdentity) +
+            " -cluster_fast " + outPath + start + "_" + end + "_reads.fasta -id " + uclustIdentity +
             " -centroids " + outPath + "centroids_reads_" + start + "_" + end + ".fasta -uc " +
             outPath + "clusters_reads_" + start + "_" + end + ".uc");
         BufferedReader streamReader = new BufferedReader(new InputStreamReader(p.getInputStream()));
@@ -151,10 +164,58 @@ public class ReferenceFinder extends Constants{
     }
   }
 
-  private void runUclust() throws IOException, InterruptedException{
+  private void runUclust() throws InterruptedException{
     ExecutorService executor = Executors.newFixedThreadPool(threadNum);
     for(int i = 0; i < fileNum; i++) {
       UclustLauncher task = new UclustLauncher(i);
+      executor.execute(task);
+    }
+    executor.shutdown();
+    executor.awaitTermination(10, TimeUnit.HOURS);
+  }
+
+  private class VSearchLauncher implements Runnable{
+
+    private int windowID;
+
+    VSearchLauncher(int id){
+      windowID = id;
+    }
+
+    @Override
+    public void run(){
+      try{
+        int start = windowID*winStep;
+        int end = start + windowLen;
+        Process p = Runtime.getRuntime().exec(pathToUclust + " -threads 1 " +
+            " -cluster_fast " + outPath + start + "_" + end + "_reads.fasta -id " + uclustIdentity +
+            " -centroids " + outPath + "centroids_reads_" + start + "_" + end + ".fasta -uc " +
+            outPath + "clusters_reads_" + start + "_" + end + ".uc");
+        BufferedReader streamReader = new BufferedReader(new InputStreamReader(p.getInputStream()));
+        String line;
+        while((line = streamReader.readLine()) != null){
+          //System.out.println(line);
+        }
+        streamReader = new BufferedReader(new InputStreamReader(p.getErrorStream()));
+        while((line = streamReader.readLine()) != null){
+          //System.out.println(line);
+        }
+        p.waitFor();
+        if(!debug){
+          File file = new File(outPath + start + "_" + end + "_reads.fasta");
+          file.delete();
+        }
+      }catch(Exception e){
+        e.printStackTrace();
+        System.exit(1);
+      }
+    }
+  }
+
+  private void runVSearch() throws InterruptedException{
+    ExecutorService executor = Executors.newFixedThreadPool(threadNum);
+    for(int i = 0; i < fileNum; i++) {
+      VSearchLauncher task = new VSearchLauncher(i);
       executor.execute(task);
     }
     executor.shutdown();
@@ -213,7 +274,7 @@ public class ReferenceFinder extends Constants{
     clusters = contigBuilder.buildContigs(clustersRaw);
   }
 
-  private void mergeContigs() throws IOException, InterruptedException, IllegalAccessException, InvocationTargetException, InstantiationException {
+  private void mergeContigs() throws IOException, InterruptedException{
     long time = System.currentTimeMillis();
     //graph = (Graph)graphConstructor.newInstance(config, clusters, mappedData);
     graph = new Graph(config, clusters, mappedData, windowLen, winStep, refSubseqs);
@@ -222,7 +283,7 @@ public class ReferenceFinder extends Constants{
     longestPaths = longestPathFinder.findLongestPaths(graph.vertices);
     logger.println("Longest paths time: " + (System.currentTimeMillis() - time)/1000);
     if(debug){
-      logger.printLongestPaths(longestPaths);
+      debugPrinter.printLongestPaths(longestPaths);
     }
     //graph.printVertices(pathToClusters);
   }
@@ -328,7 +389,7 @@ public class ReferenceFinder extends Constants{
   }
 
   private ArrayList<Reference> sortReadsToSelectedRef(HashMap<String, int[]> selectedRef)
-      throws IOException, InterruptedException{
+      throws InterruptedException{
     ArrayList<Reference> res = new ArrayList<>();
     TObjectIntHashMap<String> refNameToID = new TObjectIntHashMap<>();
     for(Map.Entry<String, int[]> entry: selectedRef.entrySet()){
@@ -456,7 +517,7 @@ public class ReferenceFinder extends Constants{
   }
 
 
-  public ArrayList<Reference> selectReferences(ArrayList<PairedRead> reads) throws InterruptedException, IOException, IllegalAccessException, InstantiationException, InvocationTargetException{
+  public ArrayList<Reference> selectReferences(ArrayList<PairedRead> reads) throws InterruptedException, IOException{
     long time = System.currentTimeMillis();
     mappedData = mapper.mapAllReads(reads, refAlignment);
     logger.println("Time: " + (System.currentTimeMillis() - time)/1000);
@@ -477,7 +538,8 @@ public class ReferenceFinder extends Constants{
     }
     logger.println("Preprocess time: " + (System.currentTimeMillis() - time)/1000);
     time = System.currentTimeMillis();
-    runUclust();
+//    runUclust();
+    runVSearch();
     logger.println("UClust time: " + (System.currentTimeMillis() - time)/1000);
     time = System.currentTimeMillis();
     readClustersAndBuildContigs();
@@ -504,28 +566,37 @@ public class ReferenceFinder extends Constants{
     return res;
   }
 
-  private static void printUsage(){
-    System.out.println("Usage: java -cp ./VirGenA.jar ReferenceFinder pathToConfigFile");
+  static void addParameters(ArgumentParser parser){
+    parser.description("This tool will " +
+        "choose one or more references from given paired reads using given set of aligned reference " +
+        "sequences. All the parameters should be provided in the config file.");
+    parser.addArgument("-c").dest("config_file").help("Path to config file").required(true);
+  }
+
+  static void run(Namespace parsedArgs){
+    try{
+      SAXBuilder jdomBuilder = new SAXBuilder();
+      Document jdomDocument = jdomBuilder.build(parsedArgs.getString("config_file"));
+      ReferenceFinder refFinder = new ReferenceFinder(jdomDocument);
+      DataReader dataReader = DataReader.getInstance(jdomDocument);
+      refFinder.selectReferences(dataReader.pairedReads);
+    }catch(Exception e){
+      e.printStackTrace();
+    }
   }
 
   public static void main(String[] args){
+    ArgumentParser parser = ArgumentParsers.newFor("ReferenceFinder").build();
+    addParameters(parser);
+    if(args.length == 0){
+      parser.printUsage();
+      return;
+    }
     try{
-      if(args.length == 0 || args[0].equals("-h")){
-        printUsage();
-        return;
-      }
-      if(args.length != 1){
-        System.out.println("Wrong parameter number!");
-        printUsage();
-        return;
-      }
-      SAXBuilder jdomBuilder = new SAXBuilder();
-      Document jdomDocument = jdomBuilder.build(args[0]);
-      ReferenceFinder refFinder = new ReferenceFinder(jdomDocument);
-      DataReader dataReader = new DataReader(jdomDocument);
-      refFinder.selectReferences(dataReader.readFilesWithReads());
-    }catch(Exception e){
-      e.printStackTrace();
+      Namespace parsedArgs = parser.parseArgs(args);
+      run(parsedArgs);
+    }catch(ArgumentParserException e){
+      parser.handleError(e);
     }
 
   }
