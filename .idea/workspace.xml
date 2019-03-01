@@ -1,42 +1,251 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
+  <component name="ArtifactsWorkspaceSettings">
+    <artifacts-to-build>
+      <artifact name="VirGenA:jar" />
+    </artifacts-to-build>
+  </component>
   <component name="ChangeListManager">
-    <list default="true" id="d1eef0ee-6c44-4cdc-a3e6-eb65abbf9e4c" name="Default Changelist" comment="" />
+    <list default="true" id="696c1b0e-57a8-448a-94f5-48d3ede77327" name="Default" comment="" />
+    <ignored path="RefAsm.iws" />
+    <ignored path=".idea/workspace.xml" />
+    <ignored path="$PROJECT_DIR$/out/" />
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
+  <component name="CreatePatchCommitExecutor">
+    <option name="PATCH_PATH" value="" />
+  </component>
+  <component name="FavoritesManager">
+    <favorites_list name="RefAsm" />
+  </component>
   <component name="FileEditorManager">
-    <leaf>
+    <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
       <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/Mapper.java">
+        <entry file="file://$PROJECT_DIR$/src/KMerCounterMSA.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="810">
-              <caret line="29" selection-start-line="29" selection-end-line="29" />
+            <state relative-caret-position="532">
+              <caret line="66" lean-forward="true" selection-start-line="66" selection-end-line="66" />
               <folding>
-                <element signature="imports" expanded="true" />
-                <element signature="method#Mapper#0;class#Mapper#0" expanded="true" />
+                <element signature="method#KMerCounterMSA#0;class#KMerCounterMSA#0" expanded="true" />
+                <element signature="method#KMerCounterMSA#1;class#KMerCounterMSA#0" expanded="true" />
+                <element signature="method#getInstance#0;class#KMerCounterMSA#0" expanded="true" />
+                <element signature="method#getInstance#1;class#KMerCounterMSA#0" expanded="true" />
               </folding>
             </state>
           </provider>
         </entry>
       </file>
       <file pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/config_hcmv.xml">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="1980">
+              <caret line="66" column="23" lean-forward="true" selection-start-line="66" selection-start-column="23" selection-end-line="66" selection-end-column="23" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/RandomModel.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="1200">
+              <caret line="100" column="20" selection-start-line="100" selection-start-column="20" selection-end-line="100" selection-end-column="20" />
+              <folding>
+                <element signature="method#RandomModel#0;class#RandomModel#0" expanded="true" />
+                <element signature="method#run#0;class#RandomCountsComputing#0;class#RandomModel#0" expanded="true" />
+                <element signature="method#genRandomScores#0;class#RandomModel#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/ReferenceFinder.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="1890">
+              <caret line="521" selection-start-line="521" selection-end-line="521" />
+              <folding>
+                <element signature="method#ReferenceFinder#0;class#ReferenceFinder#0" expanded="true" />
+                <element signature="method#groupReads#0;class#ReferenceFinder#0" expanded="true" />
+                <element signature="method#run#0;class#UclustLauncher#0;class#ReferenceFinder#0" expanded="true" />
+                <element signature="method#run#0;class#ReadScoreComputer#0;class#ReferenceFinder#0" expanded="true" />
+                <element signature="method#addParameters#0;class#ReferenceFinder#0" expanded="true" />
+                <element signature="method#run#0;class#ReferenceFinder#0" expanded="true" />
+                <element signature="method#main#0;class#ReferenceFinder#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/MapperMSA.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="360">
+              <caret line="19" column="36" selection-start-line="19" selection-start-column="36" selection-end-line="19" selection-end-column="36" />
+              <folding>
+                <element signature="method#mapReadFast#0;class#ReadMapping#0;class#MapperMSA#0" expanded="true" />
+                <element signature="method#mapAllReads#0;class#MapperMSA#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/RandomModelMSA.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="390">
+              <caret line="24" column="2" selection-start-line="24" selection-start-column="2" selection-end-line="24" selection-end-column="2" />
+              <folding>
+                <element signature="method#RandomModelMSA#0;class#RandomModelMSA#0" expanded="true" />
+                <element signature="method#RandomModelMSA#1;class#RandomModelMSA#0" expanded="true" />
+                <element signature="method#printModel#0;class#RandomModelMSA#0" expanded="true" />
+                <element signature="method#genModel#0;class#RandomModelMSA#0" expanded="true" />
+                <element signature="class#RandomCountsComputing#0;class#RandomModelMSA#0" expanded="true" />
+                <element signature="method#RandomCountsComputing#0;class#RandomCountsComputing#0;class#RandomModelMSA#0" expanded="true" />
+                <element signature="method#run#0;class#RandomCountsComputing#0;class#RandomModelMSA#0" expanded="true" />
+                <element signature="method#genRandomScores#0;class#RandomModelMSA#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/RefBasedAssembler.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="112">
-              <caret line="454" lean-forward="true" selection-start-line="454" selection-end-line="454" />
+            <state relative-caret-position="780">
+              <caret line="46" column="28" selection-start-line="46" selection-start-column="28" selection-end-line="46" selection-end-column="28" />
               <folding>
-                <element signature="imports" expanded="true" />
+                <element signature="method#buildUsingRef#0;class#RefBasedAssembler#0" expanded="true" />
+                <element signature="method#buildUsingRefNoPostproc#0;class#RefBasedAssembler#0" expanded="true" />
+                <element signature="method#adjustCoord#0;class#RefBasedAssembler#0" expanded="true" />
+                <element signature="docComment;method#resortReads#0;class#RefBasedAssembler#0" expanded="true" />
+                <element signature="docComment;method#reformatAssembly#0;class#RefBasedAssembler#0" expanded="true" />
+                <element signature="docComment;method#recomputeAssemblyConsensus#0;class#RefBasedAssembler#0" expanded="true" />
+                <element signature="method#assemble#0;class#RefBasedAssembler#0" expanded="true" />
+                <element signature="method#addParameters#0;class#RefBasedAssembler#0" expanded="true" />
+                <element signature="method#run#0;class#RefBasedAssembler#0" expanded="true" />
                 <element signature="method#main#0;class#RefBasedAssembler#0" expanded="true" />
               </folding>
             </state>
           </provider>
         </entry>
       </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/KMerCounterBase.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="60">
+              <caret line="2" column="6" selection-start-line="2" selection-start-column="6" selection-end-line="2" selection-end-column="6" />
+              <folding>
+                <element signature="e#6979#7829#0" expanded="true" />
+                <element signature="e#7883#8160#0" expanded="true" />
+                <element signature="e#9827#10409#0" expanded="true" />
+                <element signature="e#13738#14169#0" expanded="true" />
+                <element signature="e#14173#14830#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/ReferenceAlignment.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="750">
+              <caret line="38" column="10" selection-start-line="38" selection-start-column="10" selection-end-line="38" selection-end-column="10" />
+              <folding>
+                <element signature="method#ReferenceAlignment#1;class#ReferenceAlignment#0" expanded="true" />
+                <element signature="method#getInstance#0;class#ReferenceAlignment#0" expanded="true" />
+                <element signature="method#getInstance#1;class#ReferenceAlignment#0" expanded="true" />
+                <element signature="method#readRefAlns#0;class#ReferenceAlignment#0" expanded="true" />
+                <element signature="method#AlnIndexBuilder#0;class#AlnIndexBuilder#0;class#ReferenceAlignment#0" expanded="true" />
+                <element signature="method#run#0;class#AlnIndexBuilder#0;class#ReferenceAlignment#0" expanded="true" />
+                <element signature="method#buildAlnIndex#0;class#ReferenceAlignment#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/config.xml">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="1320">
+              <caret line="44" column="24" selection-start-line="44" selection-start-column="24" selection-end-line="44" selection-end-column="24" />
+            </state>
+          </provider>
+        </entry>
+      </file>
     </leaf>
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Class" />
+      </list>
+    </option>
+  </component>
+  <component name="FindInProjectRecents">
+    <findStrings>
+      <find>TGGAG</find>
+    </findStrings>
+  </component>
+  <component name="IdeDocumentHistory">
+    <option name="CHANGED_PATHS">
+      <list>
+        <option value="$PROJECT_DIR$/src/Cut.java" />
+        <option value="$PROJECT_DIR$/src/RefBasedAssembler1.java" />
+        <option value="$PROJECT_DIR$/src/ContigBuilder.java" />
+        <option value="$PROJECT_DIR$/src/MappedData.java" />
+        <option value="$PROJECT_DIR$/src/BamPrinter.java" />
+        <option value="$PROJECT_DIR$/src/Interval.java" />
+        <option value="$PROJECT_DIR$/src/ProblemInterval.java" />
+        <option value="$PROJECT_DIR$/src/RandomModelParams.java" />
+        <option value="$PROJECT_DIR$/src/ProblemReadMapperPairedReadTermination.java" />
+        <option value="$PROJECT_DIR$/src/Cluster.java" />
+        <option value="$PROJECT_DIR$/src/Clusterer.java" />
+        <option value="$PROJECT_DIR$/src/ReferenceFinder1.java" />
+        <option value="$PROJECT_DIR$/src/SmithWatermanGotoh.java" />
+        <option value="$PROJECT_DIR$/src/Aligner.java" />
+        <option value="$PROJECT_DIR$/src/NeedlemanWunschGotoh.java" />
+        <option value="$PROJECT_DIR$/src/LazyAligner.java" />
+        <option value="$PROJECT_DIR$/src/ProblemRead.java" />
+        <option value="$PROJECT_DIR$/config_E1.xml" />
+        <option value="$PROJECT_DIR$/src/MappedRead.java" />
+        <option value="$PROJECT_DIR$/config_E16.xml" />
+        <option value="$PROJECT_DIR$/src/MarkovModel.java" />
+        <option value="$PROJECT_DIR$/src/DebugPrinter.java" />
+        <option value="$PROJECT_DIR$/src/Logger.java" />
+        <option value="$PROJECT_DIR$/src/MinRefSetSelector.java" />
+        <option value="$PROJECT_DIR$/src/ConsensusBuilderSimple.java" />
+        <option value="$PROJECT_DIR$/src/ProblemReadMapper.java" />
+        <option value="$PROJECT_DIR$/src/RandomModelBuilder.java" />
+        <option value="$PROJECT_DIR$/src/AlnPos.java" />
+        <option value="$PROJECT_DIR$/src/Postprocessor.java" />
+        <option value="$PROJECT_DIR$/src/MassRefBasedAssembler.java" />
+        <option value="$PROJECT_DIR$/config_local.xml" />
+        <option value="$PROJECT_DIR$/src/Location.java" />
+        <option value="$PROJECT_DIR$/src/KMerCounter1.java" />
+        <option value="$PROJECT_DIR$/src/KMerCounterBase1.java" />
+        <option value="$PROJECT_DIR$/src/MapperMSA.java" />
+        <option value="$PROJECT_DIR$/src/Mapper.java" />
+        <option value="$PROJECT_DIR$/src/ConsensusBuilderWithReassembling.java" />
+        <option value="$PROJECT_DIR$/src/RefBasedAssembler.java" />
+        <option value="$PROJECT_DIR$/src/DataReader.java" />
+        <option value="$PROJECT_DIR$/src/MassReferenceFinder.java" />
+        <option value="$PROJECT_DIR$/src/KMerCounterBase.java" />
+        <option value="$PROJECT_DIR$/src/VirGenA.java" />
+        <option value="$PROJECT_DIR$/src/ReferenceFinder.java" />
+        <option value="$PROJECT_DIR$/src/Reference.java" />
+        <option value="$PROJECT_DIR$/src/ReferenceAlignment.java" />
+        <option value="$PROJECT_DIR$/src/RandomModel.java" />
+        <option value="$PROJECT_DIR$/config.xml" />
+        <option value="$PROJECT_DIR$/src/RandomModelMSA.java" />
+        <option value="$PROJECT_DIR$/src/KMerCounterMSA.java" />
+        <option value="$PROJECT_DIR$/src/KMerCounter.java" />
+        <option value="$PROJECT_DIR$/config_hcmv.xml" />
+      </list>
+    </option>
   </component>
   <component name="ProjectFrameBounds" extendedState="6">
     <option name="x" value="-8" />
@@ -49,32 +258,33 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
+      <pane id="Scope" />
       <pane id="PackagesPane" />
       <pane id="ProjectPane">
         <subPane>
           <expand>
             <path>
-              <item name="VirGenA" type="b2602c69:ProjectViewProjectNode" />
-              <item name="VirGenA" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="VirGenA" type="b2602c69:ProjectViewProjectNode" />
-              <item name="VirGenA" type="462c0819:PsiDirectoryNode" />
-              <item name="src" type="462c0819:PsiDirectoryNode" />
+              <item name="RefAsm" type="b2602c69:ProjectViewProjectNode" />
+              <item name="RefAsm" type="462c0819:PsiDirectoryNode" />
             </path>
           </expand>
           <select />
         </subPane>
       </pane>
-      <pane id="Scope" />
     </panes>
   </component>
   <component name="PropertiesComponent">
+    <property name="GoToClass.includeLibraries" value="false" />
+    <property name="GoToClass.toSaveIncludeLibraries" value="false" />
+    <property name="GoToFile.includeJavaFiles" value="false" />
+    <property name="MemberChooser.copyJavadoc" value="false" />
+    <property name="MemberChooser.showClasses" value="true" />
+    <property name="MemberChooser.sorted" value="false" />
     <property name="last_opened_file_path" value="$PROJECT_DIR$" />
     <property name="project.structure.last.edited" value="Modules" />
-    <property name="project.structure.proportion" value="0.0" />
-    <property name="project.structure.side.proportion" value="0.0" />
-    <property name="settings.editor.selected.configurable" value="preferences.lookFeel" />
+    <property name="project.structure.proportion" value="0.15" />
+    <property name="project.structure.side.proportion" value="0.20344828" />
+    <property name="settings.editor.selected.configurable" value="reference.settingsdialog.IDE.editor.colors.Color Scheme Font" />
   </component>
   <component name="RunDashboard">
     <option name="ruleStates">
@@ -88,59 +298,689 @@
       </list>
     </option>
   </component>
-  <component name="RunManager">
+  <component name="RunManager" selected="Application.RefBasedAssembler">
+    <configuration name="&lt;template&gt;" type="JUnit" default="true" selected="false">
+      <option name="MAIN_CLASS_NAME" />
+      <option name="VM_PARAMETERS" value="-ea" />
+      <option name="PARAMETERS" />
+      <option name="WORKING_DIRECTORY" value="$MODULE_DIR$" />
+    </configuration>
+    <configuration name="&lt;template&gt;" type="TestNG" default="true" selected="false">
+      <option name="MAIN_CLASS_NAME" />
+      <option name="VM_PARAMETERS" value="-ea" />
+      <option name="PARAMETERS" />
+      <option name="WORKING_DIRECTORY" value="$MODULE_DIR$" />
+    </configuration>
+    <configuration name="&lt;template&gt;" type="#org.jetbrains.idea.devkit.run.PluginConfigurationType" default="true" selected="false">
+      <option name="VM_PARAMETERS" value="-Xmx512m -Xms256m -XX:MaxPermSize=250m -ea" />
+    </configuration>
     <configuration default="true" type="Applet">
       <option name="POLICY_FILE" value="$APPLICATION_HOME_DIR$/bin/appletviewer.policy" />
       <method v="2">
         <option name="Make" enabled="true" />
       </method>
     </configuration>
-    <configuration default="true" type="Application" factoryName="Application">
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
-      <extension name="coverage" enabled="false" merge="false" sample_coverage="true" runner="idea" />
+    <configuration name="Mapper" type="Application" factoryName="Application">
+      <option name="MAIN_CLASS_NAME" value="Mapper" />
+      <module name="VirGenA" />
+      <option name="PROGRAM_PARAMETERS" value="./config_HCV.xml" />
+      <option name="WORKING_DIRECTORY" value="file://$PROJECT_DIR$" />
       <method v="2">
         <option name="Make" enabled="true" />
       </method>
     </configuration>
+    <configuration name="NeedlemanWunschGotoh" type="Application" factoryName="Application">
+      <option name="MAIN_CLASS_NAME" value="NeedlemanWunschGotoh" />
+      <module name="VirGenA" />
+      <option name="WORKING_DIRECTORY" value="file://$PROJECT_DIR$" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="RandomModelBuilder" type="Application" factoryName="Application">
+      <option name="MAIN_CLASS_NAME" value="RandomModelBuilder" />
+      <module name="VirGenA" />
+      <option name="PROGRAM_PARAMETERS" value="-refMSA d:\\MyProjects\Neverov\\Enc\\for_886_assembly.fasta -k 7 -hitRatio 1.5 -out d:\\MyProjects\\Neverov\\Enc\\test.random_model" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="RefBasedAssembler" type="Application" factoryName="Application">
+      <option name="MAIN_CLASS_NAME" value="RefBasedAssembler" />
+      <module name="VirGenA" />
+      <option name="PROGRAM_PARAMETERS" value="-c ./config_hcmv.xml" />
+      <option name="VM_PARAMETERS" value="-Xmx2048m" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="ReferenceFinder" type="Application" factoryName="Application">
+      <option name="MAIN_CLASS_NAME" value="ReferenceFinder" />
+      <module name="VirGenA" />
+      <option name="PROGRAM_PARAMETERS" value="config.xml" />
+      <option name="VM_PARAMETERS" value="-Xmx1024m" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration default="true" type="Application" factoryName="Application">
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <list>
+      <item itemvalue="Application.Mapper" />
+      <item itemvalue="Application.NeedlemanWunschGotoh" />
+      <item itemvalue="Application.RandomModelBuilder" />
+      <item itemvalue="Application.RefBasedAssembler" />
+      <item itemvalue="Application.ReferenceFinder" />
+    </list>
+  </component>
+  <component name="TodoView">
+    <todo-panel id="selected-file">
+      <is-autoscroll-to-source value="true" />
+    </todo-panel>
+    <todo-panel id="all">
+      <are-packages-shown value="true" />
+      <is-autoscroll-to-source value="true" />
+    </todo-panel>
   </component>
   <component name="ToolWindowManager">
     <frame x="-8" y="-8" width="1936" height="1056" extended-state="6" />
     <editor active="true" />
     <layout>
-      <window_info id="Favorites" order="0" side_tool="true" />
-      <window_info active="true" content_ui="combo" id="Project" order="1" visible="true" weight="0.22128557" />
-      <window_info id="Structure" order="2" side_tool="true" />
-      <window_info id="Designer" order="3" />
-      <window_info anchor="bottom" id="Messages" />
-      <window_info anchor="bottom" id="Event Log" order="0" side_tool="true" weight="0.32937366" />
-      <window_info anchor="bottom" id="Version Control" order="1" show_stripe_button="false" />
-      <window_info anchor="bottom" id="TODO" order="2" />
-      <window_info anchor="right" id="Palette&#9;" order="0" />
+      <window_info id="Project" order="0" visible="true" weight="0.24868283" />
+      <window_info id="Structure" order="1" weight="0.25" />
+      <window_info id="Designer" order="2" />
+      <window_info id="Favorites" order="3" side_tool="true" />
+      <window_info anchor="bottom" id="Message" order="0" />
+      <window_info anchor="bottom" id="Find" order="1" sideWeight="0.49947312" weight="0.32829374" />
+      <window_info active="true" anchor="bottom" id="Run" order="2" visible="true" weight="0.32829374" />
+      <window_info anchor="bottom" id="Debug" order="3" weight="0.39848813" />
+      <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
+      <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
+      <window_info anchor="bottom" id="TODO" order="6" sideWeight="0.49682036" weight="0.32949308" />
+      <window_info anchor="bottom" id="Messages" order="7" weight="0.32829374" />
+      <window_info anchor="bottom" id="Version Control" order="8" show_stripe_button="false" />
+      <window_info anchor="bottom" id="Event Log" order="9" sideWeight="0.50052685" side_tool="true" weight="0.32829374" />
+      <window_info anchor="right" id="Commander" order="0" weight="0.4" />
+      <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
+      <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.25" />
+      <window_info anchor="right" id="Palette&#9;" order="3" />
     </layout>
   </component>
+  <component name="Vcs.Log.UiProperties">
+    <option name="RECENTLY_FILTERED_USER_GROUPS">
+      <collection />
+    </option>
+    <option name="RECENTLY_FILTERED_BRANCH_GROUPS">
+      <collection />
+    </option>
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/src/MapperMSA.java</url>
+          <line>231</line>
+          <properties />
+          <option name="timeStamp" value="92" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/src/RefBasedAssembler.java</url>
+          <line>622</line>
+          <properties />
+          <option name="timeStamp" value="120" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/src/RefBasedAssembler.java</url>
+          <line>623</line>
+          <properties />
+          <option name="timeStamp" value="123" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/src/RefBasedAssembler.java</url>
+          <line>606</line>
+          <properties />
+          <option name="timeStamp" value="124" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/src/RefBasedAssembler.java</url>
+          <line>621</line>
+          <properties />
+          <option name="timeStamp" value="127" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/src/RefBasedAssembler.java</url>
+          <line>488</line>
+          <properties />
+          <option name="timeStamp" value="128" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/src/RefBasedAssembler.java</url>
+          <line>594</line>
+          <properties />
+          <option name="timeStamp" value="217" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/src/Mapper.java</url>
+          <line>93</line>
+          <properties />
+          <option name="timeStamp" value="231" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/src/RefBasedAssembler.java</url>
+          <line>613</line>
+          <properties />
+          <option name="timeStamp" value="233" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/src/ReferenceFinder.java</url>
+          <line>521</line>
+          <properties />
+          <option name="timeStamp" value="240" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
+  </component>
+  <component name="debuggerHistoryManager">
+    <expressions id="arrayFilter">
+      <expression>
+        <expression-string>counts[i] &gt;= 0</expression-string>
+        <language-id>JAVA</language-id>
+        <evaluation-mode>EXPRESSION</evaluation-mode>
+      </expression>
+      <expression>
+        <expression-string>counts[i] &gt; 0</expression-string>
+        <language-id>JAVA</language-id>
+        <evaluation-mode>EXPRESSION</evaluation-mode>
+      </expression>
+    </expressions>
+    <expressions id="setValue">
+      <expression>
+        <expression-string>&quot;GACGTGGGCCAGGAAGAGAGAATAGAGACCCCGATAGTGCCCAGTGTGGGCTGGTCGGCGTATGCAGCATCCTAGCAAAGAACTGATTCCCTCCTGGCCTCCACTTTCCACGATGGAAACCGGATCTATGTGTCACACCATCCTACATGCCATCCAAGCCGTTCCTATAAACCATTTATTCCTTAAAGCCCCATCTTTTATCTCCTATCCCTTCGAAAAGTATCTTTGTCATTTGGAGACCTTGAGCGG&quot;</expression-string>
+        <language-id>JAVA</language-id>
+        <evaluation-mode>EXPRESSION</evaluation-mode>
+      </expression>
+    </expressions>
+  </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/config.xml">
-      <provider selected="true" editor-type-id="text-editor" />
+    <entry file="file://$PROJECT_DIR$/src/NeedlemanWunschGotoh.java" />
+    <entry file="file://$PROJECT_DIR$/src/ProblemIntervalBuilder.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state>
+          <caret line="194" column="9" selection-start-line="194" selection-start-column="9" selection-end-line="194" selection-end-column="9" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/RepeatInterval.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="30">
+          <caret line="3" column="13" selection-start-line="3" selection-start-column="13" selection-end-line="3" selection-end-column="13" />
+          <folding>
+            <element signature="method#RepeatInterval#0;class#RepeatInterval#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/MappedRead.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="720">
+          <caret line="38" column="2" selection-start-line="38" selection-start-column="2" selection-end-line="38" selection-end-column="2" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/Aligner.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="420">
+          <caret line="17" column="9" selection-start-line="17" selection-start-column="9" selection-end-line="17" selection-end-column="9" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/SmithWatermanGotoh.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="150">
+          <caret line="7" column="11" selection-start-line="7" selection-start-column="11" selection-end-line="7" selection-end-column="11" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="jar://$PROJECT_DIR$/../../Tools/argparse4j-0.8.1.jar!/net/sourceforge/argparse4j/ArgumentParsers.class" />
+    <entry file="file://$PROJECT_DIR$/config_E16.xml">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="390">
+          <caret line="13" column="21" selection-start-line="13" selection-start-column="9" selection-end-line="13" selection-end-column="21" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/META-INF/MANIFEST.MF" />
+    <entry file="file://$PROJECT_DIR$/src/Logger.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="153">
+          <caret line="27" column="35" selection-start-line="27" selection-start-column="35" selection-end-line="27" selection-end-column="35" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/META-INF/MANIFEST.MF">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="60">
+          <caret line="2" column="25" lean-forward="true" selection-start-line="2" selection-start-column="25" selection-end-line="2" selection-end-column="25" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/DebugPrinter.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="352">
+          <caret line="33" column="17" lean-forward="true" selection-start-line="33" selection-start-column="17" selection-end-line="33" selection-end-column="17" />
+          <folding>
+            <element signature="imports" expanded="true" />
+            <element signature="method#getInstance#0;class#DebugPrinter#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/ProblemReadMapper.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="240">
+          <caret line="14" column="16" selection-start-line="14" selection-start-column="16" selection-end-line="14" selection-end-column="16" />
+          <folding>
+            <element signature="method#ProblemReadMapper#0;class#ProblemReadMapper#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/MinRefSetSelector.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="186">
+          <caret line="52" selection-start-line="52" selection-end-line="52" />
+          <folding>
+            <element signature="method#MinRefSetSelector#0;class#MinRefSetSelector#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/AlnPos.java" />
+    <entry file="file://D:/Lib/argparse4j-0.8.1/argparse4j-0.8.1-sources/net/sourceforge/argparse4j/inf/ArgumentParser.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="298">
+          <caret line="321" column="14" selection-start-line="321" selection-start-column="14" selection-end-line="321" selection-end-column="14" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/ProblemReadMapperPairedReadTermination.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="209">
+          <caret line="23" column="2" selection-start-line="23" selection-start-column="2" selection-end-line="23" selection-end-column="2" />
+          <folding>
+            <element signature="method#ProblemReadMapperPairedReadTermination#0;class#ProblemReadMapperPairedReadTermination#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/Graph.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1350">
+          <caret line="588" column="15" selection-start-line="588" selection-start-column="15" selection-end-line="588" selection-end-column="15" />
+          <folding>
+            <element signature="method#Graph#0;class#Graph#0" expanded="true" />
+            <element signature="class#SWScore#0;class#Graph#0" expanded="true" />
+            <element signature="method#run#0;class#SWScore#0;class#Graph#0" expanded="true" />
+            <element signature="method#assignReferencesToClusters#0;class#Graph#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/Postprocessor.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="288">
+          <caret line="33" selection-start-line="33" selection-end-line="33" />
+          <folding>
+            <element signature="method#setDest#0;class#Postprocessor#0" expanded="true" />
+            <element signature="method#updateIntervals#0;class#Postprocessor#0" expanded="true" />
+            <element signature="method#findRegionsToCut#0;class#Postprocessor#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/KMerCounterBase1.java" />
+    <entry file="file://$PROJECT_DIR$/src/KMerCounter1.java" />
+    <entry file="file://$PROJECT_DIR$/src/Location.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="600">
+          <caret line="31" column="34" selection-start-line="31" selection-start-column="34" selection-end-line="31" selection-end-column="34" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/Constants.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="180">
+          <caret line="9" lean-forward="true" selection-start-line="9" selection-end-line="9" />
+          <folding>
+            <element signature="method#getComplement#0;class#Constants#0" expanded="true" />
+            <element signature="initializer##3;class#Constants#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/ContigBuilder.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="288">
+          <caret line="28" column="34" lean-forward="true" selection-start-line="28" selection-start-column="34" selection-end-line="28" selection-end-column="34" />
+          <folding>
+            <element signature="class#ContigBuilding#0;class#ContigBuilder#0" expanded="true" />
+            <element signature="method#run#0;class#ContigBuilding#0;class#ContigBuilder#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="jar://C:/Program Files/Java/jdk1.8.0_92/src.zip!/java/lang/Override.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="240">
+          <caret line="50" column="18" selection-start-line="50" selection-start-column="18" selection-end-line="50" selection-end-column="18" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/ConsensusBuilderSimple.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-91">
+          <caret line="12" column="6" selection-start-line="12" selection-start-column="6" selection-end-line="12" selection-end-column="6" />
+          <folding>
+            <element signature="method#buildConsensus#0;class#ConsensusBuilderSimple#0" expanded="true" />
+            <element signature="class#ReadCounting#0;class#ConsensusBuilderSimple#0" expanded="true" />
+            <element signature="method#run#0;class#ReadCounting#0;class#ConsensusBuilderSimple#0" expanded="true" />
+            <element signature="class#ConsensusBuildingSimple#0;class#ConsensusBuilderSimple#0" expanded="true" />
+            <element signature="method#run#0;class#ConsensusBuildingSimple#0;class#ConsensusBuilderSimple#0" expanded="true" />
+            <element signature="method#getConsensusSimple#0;class#ConsensusBuilderSimple#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/ConsensusBuilderWithReassembling.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="66">
+          <caret line="757" column="3" lean-forward="true" selection-start-line="757" selection-start-column="3" selection-end-line="757" selection-end-column="3" />
+          <folding>
+            <element signature="method#ConsensusBuilderWithReassembling#0;class#ConsensusBuilderWithReassembling#0" expanded="true" />
+            <element signature="method#buildConsensus#0;class#ConsensusBuilderWithReassembling#0" expanded="true" />
+            <element signature="method#printAssembly#0;class#ConsensusBuilderWithReassembling#0" expanded="true" />
+            <element signature="e#24275#25737#1" />
+            <element signature="method#adjustCoord#0;class#ConsensusBuilderWithReassembling#0" expanded="true" />
+            <element signature="method#markRemapReads#0;class#ConsensusBuilderWithReassembling#0" expanded="true" />
+            <element signature="method#remapReadsToAssembly#0;class#ConsensusBuilderWithReassembling#0" expanded="true" />
+            <element signature="method#assemble#0;class#ConsensusBuilderWithReassembling#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/Mapper.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="810">
-          <caret line="29" selection-start-line="29" selection-end-line="29" />
+        <state relative-caret-position="-144">
+          <caret line="563" column="71" selection-start-line="563" selection-start-column="71" selection-end-line="563" selection-end-column="71" />
           <folding>
             <element signature="imports" expanded="true" />
             <element signature="method#Mapper#0;class#Mapper#0" expanded="true" />
+            <element signature="method#Mapper#1;class#Mapper#0" expanded="true" />
+            <element signature="method#mapReadFast#0;class#Mapper#0" expanded="true" />
+            <element signature="class#ReadsMapping#0;class#Mapper#0" expanded="true" />
+            <element signature="method#ReadsMapping#0;class#ReadsMapping#0;class#Mapper#0" expanded="true" />
+            <element signature="method#mapRead#0;class#ReadsMapping#0;class#Mapper#0" expanded="true" />
+            <element signature="method#run#0;class#ReadsMapping#0;class#Mapper#0" expanded="true" />
+            <element signature="method#mapReads#0;class#Mapper#0" expanded="true" />
+            <element signature="method#mapReads#1;class#Mapper#0" expanded="true" />
+            <element signature="method#addParameters#0;class#Mapper#0" expanded="true" />
+            <element signature="method#main#0;class#Mapper#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/config_test.xml">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-360" />
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/config_E1.xml">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="480">
+          <caret line="25" column="15" lean-forward="true" selection-start-line="25" selection-start-column="15" selection-end-line="25" selection-end-column="15" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/VirGenA.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="120">
+          <caret line="4" lean-forward="true" selection-start-line="4" selection-end-line="4" />
+          <folding>
+            <element signature="imports" expanded="true" />
+            <element signature="method#main#0;class#VirGenA#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/MassReferenceFinder.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="3570">
+          <caret line="142" column="45" selection-start-line="142" selection-start-column="45" selection-end-line="142" selection-end-column="45" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/MassRefBasedAssembler.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="180">
+          <caret line="32" selection-start-line="32" selection-end-line="32" />
+          <folding>
+            <element signature="method#main#0;class#MassRefBasedAssembler#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/DataReader.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="652">
+          <caret line="36" column="15" selection-start-line="36" selection-start-column="15" selection-end-line="36" selection-end-column="15" />
+          <folding>
+            <element signature="method#readData#0;class#DataReader#0" expanded="true" />
+            <element signature="method#DataReader#1;class#DataReader#0" expanded="true" />
+            <element signature="method#getInstance#0;class#DataReader#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/RandomModelBuilder.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="420">
+          <caret line="45" column="62" selection-start-line="45" selection-start-column="62" selection-end-line="45" selection-end-column="62" />
+          <folding>
+            <element signature="imports" expanded="true" />
+            <element signature="method#main#0;class#RandomModelBuilder#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/MarkovModel.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-60">
+          <caret line="36" column="9" lean-forward="true" selection-start-line="36" selection-start-column="9" selection-end-line="36" selection-end-column="9" />
+          <folding>
+            <element signature="method#generate#0;class#MarkovModel#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/config_local.xml">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="420">
+          <caret line="14" column="80" lean-forward="true" selection-start-line="14" selection-start-column="23" selection-end-line="14" selection-end-column="80" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/FastaReader.java" />
+    <entry file="file://$PROJECT_DIR$/src/Reference.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="120">
+          <caret line="35" selection-start-line="35" selection-end-line="53" selection-end-column="5" />
+          <folding>
+            <element signature="method#Reference#1;class#Reference#0" expanded="true" />
+            <element signature="method#Reference#2;class#Reference#0" expanded="true" />
+            <element signature="method#buildIndex#0;class#Reference#0" expanded="true" />
+            <element signature="method#Reference#3;class#Reference#0" expanded="true" />
+            <element signature="method#Reference#4;class#Reference#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="jar://C:/Program Files/Java/jdk1.8.0_92/src.zip!/java/lang/String.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="299">
+          <caret line="164" column="11" selection-start-line="164" selection-start-column="11" selection-end-line="164" selection-end-column="11" />
+          <folding>
+            <element signature="e#5687#5688#0" expanded="true" />
+            <element signature="e#5750#5751#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/KMerCounterMSA.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="532">
+          <caret line="66" lean-forward="true" selection-start-line="66" selection-end-line="66" />
+          <folding>
+            <element signature="method#KMerCounterMSA#0;class#KMerCounterMSA#0" expanded="true" />
+            <element signature="method#KMerCounterMSA#1;class#KMerCounterMSA#0" expanded="true" />
+            <element signature="method#getInstance#0;class#KMerCounterMSA#0" expanded="true" />
+            <element signature="method#getInstance#1;class#KMerCounterMSA#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/KMerCounter.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="420">
+          <caret line="20" column="56" selection-start-line="20" selection-start-column="56" selection-end-line="20" selection-end-column="56" />
+          <folding>
+            <element signature="method#KMerCounter#2;class#KMerCounter#0" expanded="true" />
+            <element signature="method#getInstance#0;class#KMerCounter#0" expanded="true" />
+            <element signature="method#moveWindow#0;class#KMerCounter#0" expanded="true" />
+            <element signature="method#getNBestRegions#0;class#KMerCounter#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/RandomModel.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1200">
+          <caret line="100" column="20" selection-start-line="100" selection-start-column="20" selection-end-line="100" selection-end-column="20" />
+          <folding>
+            <element signature="method#RandomModel#0;class#RandomModel#0" expanded="true" />
+            <element signature="method#run#0;class#RandomCountsComputing#0;class#RandomModel#0" expanded="true" />
+            <element signature="method#genRandomScores#0;class#RandomModel#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/ReferenceFinder.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1890">
+          <caret line="521" selection-start-line="521" selection-end-line="521" />
+          <folding>
+            <element signature="method#ReferenceFinder#0;class#ReferenceFinder#0" expanded="true" />
+            <element signature="method#groupReads#0;class#ReferenceFinder#0" expanded="true" />
+            <element signature="method#run#0;class#UclustLauncher#0;class#ReferenceFinder#0" expanded="true" />
+            <element signature="method#run#0;class#ReadScoreComputer#0;class#ReferenceFinder#0" expanded="true" />
+            <element signature="method#addParameters#0;class#ReferenceFinder#0" expanded="true" />
+            <element signature="method#run#0;class#ReferenceFinder#0" expanded="true" />
+            <element signature="method#main#0;class#ReferenceFinder#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/MapperMSA.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="360">
+          <caret line="19" column="36" selection-start-line="19" selection-start-column="36" selection-end-line="19" selection-end-column="36" />
+          <folding>
+            <element signature="method#mapReadFast#0;class#ReadMapping#0;class#MapperMSA#0" expanded="true" />
+            <element signature="method#mapAllReads#0;class#MapperMSA#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/RandomModelMSA.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="390">
+          <caret line="24" column="2" selection-start-line="24" selection-start-column="2" selection-end-line="24" selection-end-column="2" />
+          <folding>
+            <element signature="method#RandomModelMSA#0;class#RandomModelMSA#0" expanded="true" />
+            <element signature="method#RandomModelMSA#1;class#RandomModelMSA#0" expanded="true" />
+            <element signature="method#printModel#0;class#RandomModelMSA#0" expanded="true" />
+            <element signature="method#genModel#0;class#RandomModelMSA#0" expanded="true" />
+            <element signature="class#RandomCountsComputing#0;class#RandomModelMSA#0" expanded="true" />
+            <element signature="method#RandomCountsComputing#0;class#RandomCountsComputing#0;class#RandomModelMSA#0" expanded="true" />
+            <element signature="method#run#0;class#RandomCountsComputing#0;class#RandomModelMSA#0" expanded="true" />
+            <element signature="method#genRandomScores#0;class#RandomModelMSA#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/RefBasedAssembler.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="112">
-          <caret line="454" lean-forward="true" selection-start-line="454" selection-end-line="454" />
+        <state relative-caret-position="780">
+          <caret line="46" column="28" selection-start-line="46" selection-start-column="28" selection-end-line="46" selection-end-column="28" />
           <folding>
-            <element signature="imports" expanded="true" />
+            <element signature="method#buildUsingRef#0;class#RefBasedAssembler#0" expanded="true" />
+            <element signature="method#buildUsingRefNoPostproc#0;class#RefBasedAssembler#0" expanded="true" />
+            <element signature="method#adjustCoord#0;class#RefBasedAssembler#0" expanded="true" />
+            <element signature="docComment;method#resortReads#0;class#RefBasedAssembler#0" expanded="true" />
+            <element signature="docComment;method#reformatAssembly#0;class#RefBasedAssembler#0" expanded="true" />
+            <element signature="docComment;method#recomputeAssemblyConsensus#0;class#RefBasedAssembler#0" expanded="true" />
+            <element signature="method#assemble#0;class#RefBasedAssembler#0" expanded="true" />
+            <element signature="method#addParameters#0;class#RefBasedAssembler#0" expanded="true" />
+            <element signature="method#run#0;class#RefBasedAssembler#0" expanded="true" />
             <element signature="method#main#0;class#RefBasedAssembler#0" expanded="true" />
           </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/KMerCounterBase.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="60">
+          <caret line="2" column="6" selection-start-line="2" selection-start-column="6" selection-end-line="2" selection-end-column="6" />
+          <folding>
+            <element signature="e#6979#7829#0" expanded="true" />
+            <element signature="e#7883#8160#0" expanded="true" />
+            <element signature="e#9827#10409#0" expanded="true" />
+            <element signature="e#13738#14169#0" expanded="true" />
+            <element signature="e#14173#14830#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/ReferenceAlignment.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="750">
+          <caret line="38" column="10" selection-start-line="38" selection-start-column="10" selection-end-line="38" selection-end-column="10" />
+          <folding>
+            <element signature="method#ReferenceAlignment#1;class#ReferenceAlignment#0" expanded="true" />
+            <element signature="method#getInstance#0;class#ReferenceAlignment#0" expanded="true" />
+            <element signature="method#getInstance#1;class#ReferenceAlignment#0" expanded="true" />
+            <element signature="method#readRefAlns#0;class#ReferenceAlignment#0" expanded="true" />
+            <element signature="method#AlnIndexBuilder#0;class#AlnIndexBuilder#0;class#ReferenceAlignment#0" expanded="true" />
+            <element signature="method#run#0;class#AlnIndexBuilder#0;class#ReferenceAlignment#0" expanded="true" />
+            <element signature="method#buildAlnIndex#0;class#ReferenceAlignment#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/config.xml">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1320">
+          <caret line="44" column="24" selection-start-line="44" selection-start-column="24" selection-end-line="44" selection-end-column="24" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/config_hcmv.xml">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1980">
+          <caret line="66" column="23" lean-forward="true" selection-start-line="66" selection-start-column="23" selection-end-line="66" selection-end-column="23" />
         </state>
       </provider>
     </entry>
@@ -150,10 +990,12 @@
       <state key="ArtifactsStructureConfigurable.UI">
         <settings>
           <artifact-editor />
+          <last-edited>VirGenA</last-edited>
           <splitter-proportions>
             <option name="proportions">
               <list>
-                <option value="0.2" />
+                <option value="0.20344828" />
+                <option value="0.5" />
               </list>
             </option>
           </splitter-proportions>
@@ -165,7 +1007,7 @@
           <splitter-proportions>
             <option name="proportions">
               <list>
-                <option value="0.2" />
+                <option value="0.20344828" />
               </list>
             </option>
           </splitter-proportions>
@@ -177,7 +1019,7 @@
           <splitter-proportions>
             <option name="proportions">
               <list>
-                <option value="0.2" />
+                <option value="0.20344828" />
               </list>
             </option>
           </splitter-proportions>
@@ -189,20 +1031,8 @@
           <splitter-proportions>
             <option name="proportions">
               <list>
-                <option value="0.2" />
+                <option value="0.20344828" />
                 <option value="0.6" />
-              </list>
-            </option>
-          </splitter-proportions>
-        </settings>
-      </state>
-      <state key="ProjectJDKs.UI">
-        <settings>
-          <last-edited>1.8</last-edited>
-          <splitter-proportions>
-            <option name="proportions">
-              <list>
-                <option value="0.2" />
               </list>
             </option>
           </splitter-proportions>
@@ -210,10 +1040,11 @@
       </state>
       <state key="ProjectLibrariesConfigurable.UI">
         <settings>
+          <last-edited>argparse4j-0.8.1</last-edited>
           <splitter-proportions>
             <option name="proportions">
               <list>
-                <option value="0.2" />
+                <option value="0.20344828" />
               </list>
             </option>
           </splitter-proportions>

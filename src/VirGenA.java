@@ -16,6 +16,9 @@ public class VirGenA{
     Subparser parserAssemble = subparsers.addParser("assemble").help("assembles the given paired reads with assist " +
         "of given reference or reference MSA");
     RefBasedAssembler.addParameters(parserAssemble);
+    Subparser parserTAB = subparsers.addParser("tab").help("generates TAB file and corresponding LIB file " +
+        "needed to run SSPACE scaffolder using VirGenA assembly with BAM file.");
+    GenerateTabFile.addParameters(parserTAB);
     if(args.length == 0){
       parser.printUsage();
       return;
@@ -35,6 +38,9 @@ public class VirGenA{
           break;
         case "model":
           RandomModelBuilder.run(parserRMBuilder, parsedArgs);
+          break;
+        case "tab":
+          GenerateTabFile.run(parsedArgs);
           break;
         default:
           parser.printUsage();

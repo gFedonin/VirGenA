@@ -1,0 +1,11 @@
+<component name="ArtifactManager">
+  <artifact type="jar" build-on-make="true" name="VirGenA">
+    <output-path>$PROJECT_DIR$/out/artifacts/VirGenA</output-path>
+    <root id="archive" name="VirGenA.jar">
+      <element id="module-output" name="VirGenA" />
+      <element id="directory" name="META-INF">
+        <element id="file-copy" path="$PROJECT_DIR$/META-INF/MANIFEST.MF" />
+      </element>
+    </root>
+  </artifact>
+</component>

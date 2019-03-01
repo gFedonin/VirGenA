@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="picard">
+    <CLASSES>
+      <root url="jar://D:/Lib/picard.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://D:/Lib/picard.jar!/" />
+    </SOURCES>
+  </library>
+</component>
