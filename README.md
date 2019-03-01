@@ -16,7 +16,7 @@ Complete documentation is provided in [wiki](https://github.com/gFedonin/VirGenA
 
 ### Installation
 
-VirGenA is a java application: it runs on any platform supporting JVM. Simply download [release](https://github.com/gFedonin/VirGenA/releases) file and run according to [usage instructions](https://github.com/gFedonin/VirGenA/wiki).
+VirGenA is a java application: it runs on any platform supporting JVM. Simply download the latest [release](https://github.com/gFedonin/VirGenA/releases) file and run according to [usage instructions](https://github.com/gFedonin/VirGenA/wiki).
 
 
 ### Required dependencies
@@ -25,19 +25,9 @@ The following are required to run VirGenA:
 
 -Java version 8 or higher
 
--[USEARCH](http://www.drive5.com/usearch/) binary in any location. Path to the binary is set in configuration file. Recomended version is included in the distribution.
+-[VSEARCH](https://github.com/torognes/vsearch) binary in any location. Path to the binary is set in configuration file. Recomended version is included in the distribution.
 
 -[Blast](https://blast.ncbi.nlm.nih.gov/Blast.cgi?PAGE_TYPE=BlastDocs&DOC_TYPE=Download) installed locally
-
--Some external libraries:
-
-  1. [JDOM](http://www.jdom.org/): Java-based solution for accessing, manipulating, and outputting XML data from Java code.
-  
-  2. [Picard Tools](https://broadinstitute.github.io/picard/): A set of command line tools (in Java) for manipulating high-throughput sequencing (HTS) data and formats such as SAM/BAM/CRAM and VCF.
-  
-  3. [The Trove library](http://trove.starlight-systems.com/) provides high speed regular and primitive collections for Java.
-
-Corresponding jars should be in the same directory with VirGenA.jar. The recommended versions are: jdom.jar version 2.0.5, picard.jar version 2.6.0 and trove.jar version 3.0.3. These jars are included in the the [release](https://github.com/gFedonin/VirGenA/releases).
 
 ### Toy example
 
@@ -49,15 +39,15 @@ You can set number of threads in config_test_win.xml by changing value of **Thre
 
 Using Windows command promt change dir to unzipped folder and type:
 
-**java -cp ./VirGenA.jar RefBasedAssembler config_test_win.xml**   
+**java -jar ./VirGenA.jar assemble config_test_win.xml**   
 
 on Linux:  
 
 You can set number of threads in config_test_linux.xml by changing value of **ThreadNumber** element.
 
-Change permissions of ./tools/usearch8.1.1861_i86linux32 to make it executable. After that using shell change dir to unzipped folder and type:
+Change permissions of ./tools/vsearch to make it executable. After that using shell change dir to unzipped folder and type:
 
-**java -cp ./VirGenA.jar RefBasedAssembler config_test_linux.xml**
+**java -jar VirGenA.jar assemble config_test_linux.xml**
 
 Test data is an artificial mixture containing 100000 HIV paired reads of three different subtypes (01_AE, B and C) in equal proportions. VirGenA should detect these components and assemble genome-length consensus sequences for all components.
 
