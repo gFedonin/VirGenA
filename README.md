@@ -39,7 +39,7 @@ You can set number of threads in config_test_win.xml by changing value of **Thre
 
 Using Windows command promt change dir to unzipped folder and type:
 
-**java -jar ./VirGenA.jar assemble config_test_win.xml**   
+**java -jar ./VirGenA.jar assemble -c config_test_win.xml**   
 
 on Linux:  
 
@@ -47,7 +47,7 @@ You can set number of threads in config_test_linux.xml by changing value of **Th
 
 Change permissions of ./tools/vsearch to make it executable. After that using shell change dir to unzipped folder and type:
 
-**java -jar VirGenA.jar assemble config_test_linux.xml**
+**java -jar VirGenA.jar assemble -c config_test_linux.xml**
 
 Test data is an artificial mixture containing 100000 HIV paired reads of three different subtypes (01_AE, B and C) in equal proportions. VirGenA should detect these components and assemble genome-length consensus sequences for all components.
 
