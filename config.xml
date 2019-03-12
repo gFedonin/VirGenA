@@ -12,7 +12,7 @@
 		<Enabled>false</Enabled>
         <UseMajor>false</UseMajor>
         <ReferenceMSA>Path to reference MSA in FASTA format</ReferenceMSA>
-        <PathToUsearch>Path vsearch executable</PathToUsearch>
+        <PathToVsearch>Path vsearch executable</PathToVsearch>
         <UclustIdentity>0.95</UclustIdentity>
         <MinReadLength>50</MinReadLength>
         <MinContigLength>1000</MinContigLength>
@@ -21,10 +21,10 @@
         <MapperToMSA>
 			<K>7</K>
 			<pValue>0.01</pValue>
+			<IndelToleranceThreshold>1.5</IndelToleranceThreshold>
 			<RandomModelParameters>
 				<Order>4</Order>
-				<IndelToleranceThreshold>1.5</IndelToleranceThreshold>
-				<ReadNum>1000</ReadNum>
+				<ReadNum>10000</ReadNum>
 				<Step>10</Step>
 			</RandomModelParameters>
         </MapperToMSA>
@@ -39,10 +39,10 @@
     <Mapper>
 		<K>5</K>
         <pValue>0.01</pValue>
+		<IndelToleranceThreshold>1.25</IndelToleranceThreshold>
 		<RandomModelParameters>
 			<Order>4</Order>
-			<IndelToleranceThreshold>1.25</IndelToleranceThreshold>
-			<ReadNum>1000</ReadNum>
+			<ReadNum>10000</ReadNum>
 			<Step>10</Step>
 		</RandomModelParameters>
         <Aligner>

@@ -1,4 +1,3 @@
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
@@ -36,7 +35,7 @@ class ProblemIntervalBuilder extends Constants{
   private class IdentityCounting implements Runnable{
 
     public float[] sumIdentity;
-    public int[] readCount;
+    public int[] coverage;
     public int from;
     public int to;
 
@@ -44,7 +43,7 @@ class ProblemIntervalBuilder extends Constants{
     @Override
     public void run(){
       sumIdentity = new float[genome.length];
-      readCount = new int[genome.length];
+      coverage = new int[genome.length];
       Iterator<MappedRead> iter = mappedData.mappedReads.listIterator(from);
       for(int n = from; n < to; n++){
         MappedRead read = iter.next();
@@ -98,7 +97,7 @@ class ProblemIntervalBuilder extends Constants{
           }
         }
         sumIdentity[start] += (float)identity/len;
-        readCount[start] ++;
+        coverage[start] ++;
         for(int i = start + 1; i <= end - windowSize; i++){
           if(i > startNoClip && i <= endNoClip){
             byte c = seq1[alnStartPos];
@@ -127,13 +126,13 @@ class ProblemIntervalBuilder extends Constants{
             }
           }
           sumIdentity[i] += (float)identity/len;
-          readCount[i] ++;
+          coverage[i] ++;
         }
       }
     }
   }
 
-  private void countIdentity(float[] identity, int[] readCount)
+  private void countIdentity(float[] identity, int[] coverage)
       throws InterruptedException{
     IdentityCounting[] tasks = new IdentityCounting[threadNum];
     ExecutorService executor = Executors.newFixedThreadPool(threadNum);
@@ -155,16 +154,16 @@ class ProblemIntervalBuilder extends Constants{
     for(IdentityCounting t: tasks){
       for(int i = 0; i < genome.length; i++){
         identity[i] += t.sumIdentity[i];
-        readCount[i] += t.readCount[i];
+        coverage[i] += t.coverage[i];
       }
     }
   }
 
   ProblemInterval[] localizeProblemRegions()
-      throws IOException, InterruptedException{
+      throws InterruptedException{
     float[] identity = new float[genome.length];
-    int[] readCounts = new int[genome.length];
-    countIdentity(identity, readCounts);
+    int[] coverage = new int[genome.length];
+    countIdentity(identity, coverage);
     boolean isGap = false;
     ArrayList<ProblemInterval> problemRegions = new ArrayList<>();
     ProblemInterval curr = new ProblemInterval();
@@ -182,8 +181,8 @@ class ProblemIntervalBuilder extends Constants{
           curr = new ProblemInterval();
         }
         float avIdentity;
-        if(readCounts[i] > 0){
-          avIdentity = identity[i]/readCounts[i];
+        if(coverage[i] > 0){
+          avIdentity = identity[i]/coverage[i];
         }else{
           avIdentity = 0;
         }
@@ -280,7 +279,7 @@ class ProblemIntervalBuilder extends Constants{
                   interval.concat[j] = genome.seqB[n];
                   interval.left[j] = genome.seqB[n];
                 }
-                interval.junction = (short) (anchorSize - 1);
+                interval.junction = anchorSize - 1;
                 interval.init(K, threadNum);
               }else{
                 interval.concat = new byte[2*anchorSize];
@@ -293,7 +292,7 @@ class ProblemIntervalBuilder extends Constants{
                   interval.concat[k] = genome.seqB[n];
                   interval.right[m] = genome.seqB[n];
                 }
-                interval.junction = (short) (anchorSize - 1);
+                interval.junction = anchorSize - 1;
                 interval.init(K, threadNum);
               }
             }
@@ -331,7 +330,7 @@ class ProblemIntervalBuilder extends Constants{
               interval.concat[i] = genome.seqB[n];
               interval.left[i] = genome.seqB[n];
             }
-            interval.junction = (short) (anchorSize - 1);
+            interval.junction = anchorSize - 1;
             interval.init(K, threadNum);
           }else{
             interval.concat = new byte[2*anchorSize];
@@ -344,7 +343,7 @@ class ProblemIntervalBuilder extends Constants{
               interval.concat[k] = genome.seqB[n];
               interval.right[i] = genome.seqB[n];
             }
-            interval.junction = (short) (anchorSize - 1);
+            interval.junction = anchorSize - 1;
             interval.init(K, threadNum);
           }
         }

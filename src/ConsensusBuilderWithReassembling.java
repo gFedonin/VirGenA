@@ -57,18 +57,18 @@ public class ConsensusBuilderWithReassembling extends ConsensusBuilderSimple{
       return null;
     }
     ProblemInterval temp = new ProblemInterval();
-    temp.start = (short)(read.aln.start2 + read.start);
-    temp.end = (short)(read.aln.end2 + read.start);
-    short i = (short)Arrays.binarySearch(problemIntervals, temp);
+    temp.start = read.aln.start2 + read.start;
+    temp.end = read.aln.end2 + read.start;
+    int i = Arrays.binarySearch(problemIntervals, temp);
     if(i < 0){
-      i = (short)(-i - 1);
+      i = (-i - 1);
     }
     int readLen = read.seq.length;
-    short cutoff = (short)mapper.counter.cutoffs[readLen];
+    int cutoff = mapper.counter.cutoffs[readLen];
     if(i == problemIntervals.length){
       ProblemInterval prev = problemIntervals[i - 1];
       if(temp.start - read.aln.start1 < prev.end){
-        ProblemRead pRead = new ProblemRead(read.name, read.n, read.seq, (short)(i - 1), read.reverse);
+        ProblemRead pRead = new ProblemRead(read.name, read.n, read.seq, i - 1, read.reverse);
         pRead.count = -1;
         pRead.cutoff = cutoff;
         problemReads.add(pRead);
@@ -93,7 +93,7 @@ public class ConsensusBuilderWithReassembling extends ConsensusBuilderSimple{
     int intersectsNext = temp.end + read.seq.length - read.aln.end1 - next.start;
     if(intersectsNext > 0){
       if(intersectsPrev > intersectsNext){
-        ProblemRead pRead = new ProblemRead(read.name, read.n, read.seq, (short)(i - 1), read.reverse);
+        ProblemRead pRead = new ProblemRead(read.name, read.n, read.seq, i - 1, read.reverse);
         pRead.count = -1;
         pRead.cutoff = cutoff;
         problemReads.add(pRead);
@@ -105,7 +105,7 @@ public class ConsensusBuilderWithReassembling extends ConsensusBuilderSimple{
       problemReads.add(pRead);
       return  pRead;
     }else if(intersectsPrev > 0){
-      ProblemRead pRead = new ProblemRead(read.name, read.n, read.seq, (short)(i - 1), read.reverse);
+      ProblemRead pRead = new ProblemRead(read.name, read.n, read.seq, i - 1, read.reverse);
       pRead.count = -1;
       pRead.cutoff = cutoff;
       problemReads.add(pRead);
@@ -173,7 +173,7 @@ public class ConsensusBuilderWithReassembling extends ConsensusBuilderSimple{
       }
     }
     logger.println("Max read len = " + mReadLen);
-    float maxCutoff = mapper.counter.cutoffs[mReadLen];//Math.max(cutoffs[mReadLen], complimentCutoffs[mReadLen]);
+    float maxCutoff = mapper.counter.cutoffs[mReadLen];
     logger.println("K-mer treshold = " + maxCutoff);
     int anchorSize;
     if((1.0f - identityThreshold)*K < 1.0f){

@@ -17,11 +17,11 @@ class SmithWatermanGotoh extends Aligner{
         /**
          * Row of the cell
          */
-        public short row;
+        public int row;
         /**
          * Column of the cell
          */
-        public short col;
+        public int col;
         /**
          * Alignment score at this cell
          */
@@ -63,8 +63,8 @@ class SmithWatermanGotoh extends Aligner{
             pointers[j] = Directions.STOP;
         }
 
-        short[] sizesOfVerticalGaps = new short[m*n];
-        short[] sizesOfHorizontalGaps = new short[m*n];
+        int[] sizesOfVerticalGaps = new int[m*n];
+        int[] sizesOfHorizontalGaps = new int[m*n];
         for(int i = 0, k = 0; i < m; i++, k += n){
             for(int j = 0; j < n; j++){
                 sizesOfVerticalGaps[k + j] = sizesOfHorizontalGaps[k + j] = 1;
@@ -76,11 +76,11 @@ class SmithWatermanGotoh extends Aligner{
     }
 
 
-    private Cell construct(byte[] s1, byte[] s2, byte[] pointers, short[] sizesOfVerticalGaps,
-                           short[] sizesOfHorizontalGaps){
+    private Cell construct(byte[] s1, byte[] s2, byte[] pointers, int[] sizesOfVerticalGaps,
+                           int[] sizesOfHorizontalGaps){
 
-        short m = (short) (s1.length + 1);
-        short n = (short) (s2.length + 1);
+        int m = s1.length + 1;
+        int n = s2.length + 1;
 
         float f; // score of alignment x1...xi to y1...yi if xi aligns to yi
         float[] g = new float[n]; // score if xi aligns to a gap after yi
@@ -114,7 +114,7 @@ class SmithWatermanGotoh extends Aligner{
                 g2 = v[j] - gop;
                 if(g1 > g2){
                     g[j] = g1;
-                    sizesOfVerticalGaps[l] = (short) (sizesOfVerticalGaps[l - n] + 1);
+                    sizesOfVerticalGaps[l] = sizesOfVerticalGaps[l - n] + 1;
                 }else{
                     g[j] = g2;
                 }
@@ -123,7 +123,7 @@ class SmithWatermanGotoh extends Aligner{
                 h2 = v[j - 1] - gop;
                 if(h1 > h2){
                     h = h1;
-                    sizesOfHorizontalGaps[l] = (short) (sizesOfHorizontalGaps[l - 1] + 1);
+                    sizesOfHorizontalGaps[l] = sizesOfHorizontalGaps[l - 1] + 1;
                 }else{
                     h = h2;
                 }
@@ -144,8 +144,8 @@ class SmithWatermanGotoh extends Aligner{
 
                 // Set the traceback start at the current cell i, j and identity
                 if(v[j] > cell.score){
-                    cell.row = (short) i;
-                    cell.col = (short) j;
+                    cell.row = i;
+                    cell.col = j;
                     cell.score = v[j];
                 }
             }
@@ -155,8 +155,8 @@ class SmithWatermanGotoh extends Aligner{
 
 
     private Alignment traceback(byte[] a1, byte[] a2,
-                                byte[] pointers, Cell cell, short[] sizesOfVerticalGaps,
-                                short[] sizesOfHorizontalGaps){
+                                byte[] pointers, Cell cell, int[] sizesOfVerticalGaps,
+                                int[] sizesOfHorizontalGaps){
 
 
         int n = a2.length + 1;
@@ -171,7 +171,7 @@ class SmithWatermanGotoh extends Aligner{
 
         int len1 = 0; // length of sequence #1 after alignment
 
-        short identity = 0; // count of identitcal pairs
+        int identity = 0; // count of identitcal pairs
 
         byte c1, c2;
 
@@ -239,8 +239,8 @@ class SmithWatermanGotoh extends Aligner{
     @Override
     public int findMaxScore(byte[] s1, byte[] s2){
 
-        short m = (short) (s1.length + 1);
-        short n = (short) (s2.length + 1);
+        int m = s1.length + 1;
+        int n = s2.length + 1;
 
         float f; // score of alignment x1...xi to y1...yi if xi aligns to yi
         float[] g = new float[n]; // score if xi aligns to a gap after yi
@@ -261,10 +261,10 @@ class SmithWatermanGotoh extends Aligner{
 
         float maxScore = 0;
 
-        for(short i = 1, k = n; i < m; i++, k += n){
+        for(int i = 1, k = n; i < m; i++, k += n){
             h = Float.NEGATIVE_INFINITY;
             vDiagonal = v[0];
-            for(short j = 1, l = (short) (k + 1); j < n; j++, l++){
+            for(int j = 1, l = k + 1; j < n; j++, l++){
                 similarityScore = (s1[i - 1] == s2[j - 1]) ? match : mismatch;
 
                 // Fill the matrices

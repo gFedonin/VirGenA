@@ -26,7 +26,7 @@ class Alignment{
   int end2;
 
   /**
-   * Count of identical locations
+   * Count of identical bases
    */
   int identity;
 

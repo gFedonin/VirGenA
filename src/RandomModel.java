@@ -24,11 +24,12 @@ public class RandomModel extends Constants{
 
   RandomModel(Document config){
     Element root = config.getRootElement();
-    Element elem = root.getChild("Mapper").getChild("RandomModelParameters");
     String pathToReference = root.getChildText("Reference");
-    scoreK = Integer.parseInt(root.getChild("Mapper").getChildText("K"));
-    modelK = Integer.parseInt(elem.getChildText("Order"));
+    Element elem = root.getChild("Mapper");
+    scoreK = Integer.parseInt(elem.getChildText("K"));
     coef = Float.parseFloat(elem.getChildText("IndelToleranceThreshold"));
+    modelK = Integer.parseInt(elem.getChild("RandomModelParameters").getChildText("Order"));
+
     threadNum = Integer.parseInt(root.getChildText("ThreadNumber"));
     if(threadNum == -1){
       threadNum = Runtime.getRuntime().availableProcessors();

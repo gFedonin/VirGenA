@@ -137,7 +137,7 @@ class ReferenceAlignment extends Constants{
 
   private void buildAlnIndex(int K) throws InterruptedException{
     AlnIndexBuilder[] tasks = new AlnIndexBuilder[refAlns.size()];
-    for(short i = 0; i < refAlns.size(); i++){
+    for(int i = 0; i < refAlns.size(); i++){
       Reference reference = refAlns.get(i);
       AlnIndexBuilder task = new AlnIndexBuilder(i, reference, K);
       tasks[i] = task;

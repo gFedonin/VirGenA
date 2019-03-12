@@ -64,7 +64,7 @@ public class ReferenceFinder extends Constants{
     }
     uclustIdentity = Float.parseFloat(rsElement.getChildText("UclustIdentity"));
     outPath = document.getRootElement().getChildText("OutPath");
-    pathToUclust = rsElement.getChildText("PathToUsearch");
+    pathToUclust = rsElement.getChildText("PathToVsearch");
     minLen = Integer.parseInt(rsElement.getChildText("MinReadLength"));
     refAlignment = ReferenceAlignment.getInstance(document);
     logger = Logger.getInstance(document);

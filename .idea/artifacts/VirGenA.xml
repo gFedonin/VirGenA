@@ -1,11 +1,12 @@
 <component name="ArtifactManager">
   <artifact type="jar" build-on-make="true" name="VirGenA">
-    <output-path>$PROJECT_DIR$/out/artifacts/VirGenA</output-path>
+    <output-path>$PROJECT_DIR$/out/artifacts/</output-path>
     <root id="archive" name="VirGenA.jar">
       <element id="module-output" name="VirGenA" />
-      <element id="directory" name="META-INF">
-        <element id="file-copy" path="$PROJECT_DIR$/META-INF/MANIFEST.MF" />
-      </element>
+      <element id="extracted-dir" path="D:/Lib/argparse4j-0.8.1/argparse4j-0.8.1.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="D:/Lib/jdom-2.0.5/jdom-2.0.5.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="D:/Lib/trove-3.0.3/lib/trove-3.0.3.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="D:/Lib/picard.jar" path-in-jar="/" />
     </root>
   </artifact>
 </component>

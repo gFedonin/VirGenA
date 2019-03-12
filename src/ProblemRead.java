@@ -5,18 +5,18 @@ import java.util.Arrays;
  */
 class ProblemRead extends MappedRead{
 
-  short gapID;
+  int gapID;
   EdgeAlignment aln;
-  short lastLen;
-  short countLeft;
-  short lastLenLeft;
-  short countRight;
-  short lastLenRight;
+  int lastLen;
+  int countLeft;
+  int lastLenLeft;
+  int countRight;
+  int lastLenRight;
   byte mappingType; // 0 left, 1 right, 2 both, -1 unmapped
-  short cutoff;
+  int cutoff;
   MappedRead mate;
 
-  ProblemRead(String name, byte n, byte[] seq, short gapID, byte reverse){
+  ProblemRead(String name, byte n, byte[] seq, int gapID, byte reverse){
     this.name = name;
     this.seq = seq;
     this.gapID = gapID;
@@ -27,14 +27,14 @@ class ProblemRead extends MappedRead{
 
 
   void setMapping(MappedRead mRead){
-    count = (short)mRead.count;
-    start = (short)mRead.start;
-    end = (short)mRead.end;
+    count = mRead.count;
+    start = mRead.start;
+    end = mRead.end;
   }
 
   void extendAlignmentLeft(ProblemInterval gap){
     byte[] gapSeq = gap.concat;
-    short junction = gap.junction;
+    int junction = gap.junction;
     end ++;
     if(mappingType == 0){
       // read is aligned to left edge
@@ -95,7 +95,7 @@ class ProblemRead extends MappedRead{
 
   void extendAlignmentRight(ProblemInterval gap){
     byte[] gapSeq = gap.concat;
-    short junction = gap.junction;
+    int junction = gap.junction;
     if(mappingType == 1){
       // read is aligned to right edge
       if(seq[aln.junctionRight - 1] ==

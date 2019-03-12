@@ -28,12 +28,14 @@ public class RandomModelMSA{
     if(threadNum == -1){
       threadNum = Runtime.getRuntime().availableProcessors();
     }
+
     Element elem = root.getChild("ReferenceSelector");
     String pathToMSA = elem.getChildText("ReferenceMSA");
-    scoreK = Integer.parseInt(elem.getChild("MapperToMSA").getChildText("K"));
-    elem = elem.getChild("MapperToMSA").getChild("RandomModelParameters");
-    modelK = Integer.parseInt(elem.getChildText("Order"));
+    elem = elem.getChild("MapperToMSA");
+    scoreK = Integer.parseInt(elem.getChildText("K"));
     coef = Float.parseFloat(elem.getChildText("IndelToleranceThreshold"));
+    modelK = Integer.parseInt(elem.getChild("RandomModelParameters").getChildText("Order"));
+
     counter = KMerCounterMSA.getInstance(scoreK, coef);
     referenceAlignment = ReferenceAlignment.getInstance(scoreK, pathToMSA, threadNum);
   }

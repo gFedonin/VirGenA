@@ -235,17 +235,19 @@ class KMerCounterBase extends Constants{
       cutoffsInterpolation[i] = counts[i][index];
     }
     cutoffs = new int[maxReadLen + 1];
-    for(int i = 0; i < minReadLen; i++){
+    for(int i = 0; i <= minReadLen; i++){
       cutoffs[i] = cutoffsInterpolation[0];
     }
-    for(int i = minReadLen; i < maxReadLen; i++){
-      int left = (i - minReadLen)/step;
-      int distToLeft = i - left*step - minReadLen;
-      int distToRight = step - distToLeft;
-      cutoffs[i] = (distToRight*cutoffsInterpolation[left] +
-          distToLeft*cutoffsInterpolation[left + 1])/step;
+    for(int i = maxReadLen; i > minReadLen ; i--){
+      int right = size - (maxReadLen - i)/step - 1;
+      if(right == 0){
+        cutoffs[i] = cutoffsInterpolation[0];
+      }else{
+        int distToRight = (maxReadLen - i)%step;
+        int distToLeft = step - distToRight;
+        cutoffs[i] = (distToRight*cutoffsInterpolation[right - 1] + distToLeft*cutoffsInterpolation[right])/step;
+      }
     }
-    cutoffs[maxReadLen] = cutoffsInterpolation[size - 1];
   }
 
   class CoordComparator implements Comparator{

@@ -6,7 +6,7 @@ import java.util.HashMap;
 class ProblemInterval extends Interval implements Comparable{
 
 
-  short junction;
+  int junction;
   byte[] concat;
   byte[] left;
   byte[] right;

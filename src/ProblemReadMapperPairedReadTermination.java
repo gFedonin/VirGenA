@@ -133,13 +133,13 @@ class ProblemReadMapperPairedReadTermination extends ProblemReadMapper {
       Iterator<ProblemRead> iter = workingLists[k].iterator();
       while (iter.hasNext()) {
         ProblemRead read = iter.next();
-        short gapID = read.gapID;
+        int gapID = read.gapID;
         ProblemInterval gap = problemIntervals[gapID];
         if(gap.merge || gap.seqFinal != null) {//gap.seqFinal != null
           iter.remove();
           continue;
         }
-        short sizeConcat = (short) gap.concat.length;
+        int sizeConcat = gap.concat.length;
         if (read.count == -1) {
           read.setMapping(mapReadVeryFast(counter, read.seq, sizeConcat, gap.index));
           read.lastLen = sizeConcat;
@@ -159,10 +159,10 @@ class ProblemReadMapperPairedReadTermination extends ProblemReadMapper {
             mappedReverse++;
           }
           if (read.aln == null) {
-            read.countLeft = (short) counter.computeKMerCount(read.seq, gap.indexLeft, 0, gap.left.length);
-            read.lastLenLeft = (short) gap.left.length;
-            read.countRight = (short) counter.computeKMerCount(read.seq, gap.indexRight, 0, gap.right.length);
-            read.lastLenRight = (short) gap.right.length;
+            read.countLeft = counter.computeKMerCount(read.seq, gap.indexLeft, 0, gap.left.length);
+            read.lastLenLeft = gap.left.length;
+            read.countRight = counter.computeKMerCount(read.seq, gap.indexRight, 0, gap.right.length);
+            read.lastLenRight = gap.right.length;
             read.alignSW(gap, aligner);
             if (read.aln.junctionLeft != -1 && read.aln.junctionRight != -1) {
               if ((float) read.aln.leftIdentity / read.aln.leftAlnLen <= identityThreshold ||
@@ -182,9 +182,9 @@ class ProblemReadMapperPairedReadTermination extends ProblemReadMapper {
                 read.aln = null;
               } else {
                 read.mappingType = 1;
-                short sizeRight = (short) gap.right.length;
+                int sizeRight = gap.right.length;
                 MappedRead mRead = mapReadVeryFast(counter, read.seq, sizeRight, gap.indexRight);
-                read.countRight = (short) mRead.count;
+                read.countRight = mRead.count;
                 read.lastLenRight = sizeRight;
                 read.setMapping(mRead);
                 read.alignSWRight(gap, aligner);
@@ -192,9 +192,9 @@ class ProblemReadMapperPairedReadTermination extends ProblemReadMapper {
             } else {
               if (read.aln.junctionRight == -1) {
                 read.mappingType = 0;
-                short sizeLeft = (short) gap.left.length;
+                int sizeLeft = gap.left.length;
                 MappedRead mRead = mapReadVeryFast(counter, read.seq, sizeLeft, gap.indexLeft);
-                read.countLeft = (short) mRead.count;
+                read.countLeft = mRead.count;
                 read.lastLenLeft = sizeLeft;
                 read.setMapping(mRead);
                 read.alignSWLeft(gap, aligner);
@@ -208,10 +208,10 @@ class ProblemReadMapperPairedReadTermination extends ProblemReadMapper {
                 if (read.aln.junctionLeft != -1) {
                   read.extendAlignmentLeft(gap);
                 } else {
-                  short sizeLeft = (short) gap.left.length;
+                  int sizeLeft = gap.left.length;
                   MappedRead mRead = mapReadVeryFast(counter, read.seq, sizeLeft, gap.indexLeft);
                   if (mRead.count > read.countLeft) {
-                    read.countLeft = (short) mRead.count;
+                    read.countLeft = mRead.count;
                     read.lastLenLeft = sizeLeft;
                     read.setMapping(mRead);
                     read.alignSWLeft(gap, aligner);
@@ -221,10 +221,10 @@ class ProblemReadMapperPairedReadTermination extends ProblemReadMapper {
                 read.extendAlignmentLeft(gap);
               } else if (read.mappingType == 1) {
                 if (read.aln.junctionRight != -1 && read.aln.junctionRight > read.seq.length / 3) {
-                  short sizeLeft = (short) gap.left.length;
+                  int sizeLeft = gap.left.length;
                   MappedRead mRead = mapReadVeryFast(counter, read.seq, sizeLeft, gap.indexLeft);
                   if (mRead.count > read.countLeft) {
-                    read.countLeft = (short) mRead.count;
+                    read.countLeft = mRead.count;
                     read.lastLenLeft = sizeLeft;
                     ProblemRead pRead = new ProblemRead(read.name, read.n, read.seq, gapID, read.reverse);
                     pRead.setMapping(mapReadVeryFast(counter, read.seq, sizeConcat, gap.index));
@@ -296,8 +296,8 @@ class ProblemReadMapperPairedReadTermination extends ProblemReadMapper {
         leftReads = new HashSet[problemIntervals.length];
         rightReads = new HashSet[problemIntervals.length];
         for(int i = 0; i < problemIntervals.length; i++){
-          leftReads[i] = new HashSet<String>();
-          rightReads[i] = new HashSet<String>();
+          leftReads[i] = new HashSet<>();
+          rightReads[i] = new HashSet<>();
         }
       }
     }
@@ -307,13 +307,13 @@ class ProblemReadMapperPairedReadTermination extends ProblemReadMapper {
       Iterator<ProblemRead> iter = workingLists[k].iterator();
       while (iter.hasNext()) {
         ProblemRead read = iter.next();
-        short gapID = read.gapID;
+        int gapID = read.gapID;
         ProblemInterval gap = problemIntervals[gapID];
         if (gap.merge || gap.seqFinal != null) {//gap.seqFinal != null
           iter.remove();
           continue;
         }
-        short sizeConcat = (short) gap.concat.length;
+        int sizeConcat = gap.concat.length;
         if (read.count == -1) {
           read.setMapping(mapReadVeryFast(counter, read.seq, sizeConcat, gap.index));
           read.lastLen = sizeConcat;
@@ -333,10 +333,10 @@ class ProblemReadMapperPairedReadTermination extends ProblemReadMapper {
             mappedReverse++;
           }
           if (read.aln == null) {
-            read.countLeft = (short) counter.computeKMerCount(read.seq, gap.indexLeft, 0, gap.left.length);
-            read.lastLenLeft = (short) gap.left.length;
-            read.countRight = (short) counter.computeKMerCount(read.seq, gap.indexRight, 0, gap.right.length);
-            read.lastLenRight = (short) gap.right.length;
+            read.countLeft = counter.computeKMerCount(read.seq, gap.indexLeft, 0, gap.left.length);
+            read.lastLenLeft = gap.left.length;
+            read.countRight = counter.computeKMerCount(read.seq, gap.indexRight, 0, gap.right.length);
+            read.lastLenRight = gap.right.length;
             read.alignSW(gap, aligner);
             if (read.aln.junctionLeft != -1 && read.aln.junctionRight != -1) {
               if ((float) read.aln.leftIdentity / read.aln.leftAlnLen <= identityThreshold ||
@@ -355,9 +355,9 @@ class ProblemReadMapperPairedReadTermination extends ProblemReadMapper {
                 read.mappingType = -1;
               } else {
                 read.mappingType = 1;
-                short sizeRight = (short) gap.right.length;
+                int sizeRight = gap.right.length;
                 MappedRead mRead = mapReadVeryFast(counter, read.seq, sizeRight, gap.indexRight);
-                read.countRight = (short) mRead.count;
+                read.countRight = mRead.count;
                 read.lastLenRight = sizeRight;
                 read.setMapping(mRead);
                 read.alignSWRight(gap, aligner);
@@ -365,9 +365,9 @@ class ProblemReadMapperPairedReadTermination extends ProblemReadMapper {
             } else {
               if (read.aln.junctionRight == -1) {
                 read.mappingType = 0;
-                short sizeLeft = (short) gap.left.length;
+                int sizeLeft = gap.left.length;
                 MappedRead mRead = mapReadVeryFast(counter, read.seq, sizeLeft, gap.indexLeft);
-                read.countLeft = (short) mRead.count;
+                read.countLeft = mRead.count;
                 read.lastLenLeft = sizeLeft;
                 read.setMapping(mRead);
                 read.alignSWLeft(gap, aligner);
@@ -383,8 +383,8 @@ class ProblemReadMapperPairedReadTermination extends ProblemReadMapper {
                 } else {
                   MappedRead mRead = mapReadVeryFast(counter, read.seq, sizeConcat, gap.indexRight);
                   if (mRead.count > read.countRight) {
-                    read.countRight = (short) mRead.count;
-                    read.lastLenRight = (short) gap.right.length;
+                    read.countRight = mRead.count;
+                    read.lastLenRight = gap.right.length;
                     read.setMapping(mRead);
                     read.alignSWRight(gap, aligner);
                   }
@@ -396,8 +396,8 @@ class ProblemReadMapperPairedReadTermination extends ProblemReadMapper {
                     read.seq.length - read.aln.junctionLeft > read.seq.length / 3) {
                   MappedRead mRead = mapReadVeryFast(counter, read.seq, sizeConcat, gap.indexRight);
                   if (mRead.count > read.countRight) {
-                    read.countRight = (short) mRead.count;
-                    read.lastLenRight = (short) gap.right.length;
+                    read.countRight = mRead.count;
+                    read.lastLenRight = gap.right.length;
                     ProblemRead pRead = new ProblemRead(read.name, read.n, read.seq, gapID, read.reverse);
                     pRead.setMapping(mapReadVeryFast(counter, read.seq, sizeConcat, gap.index));
                     pRead.alignSW(gap, aligner);
@@ -556,7 +556,7 @@ class ProblemReadMapperPairedReadTermination extends ProblemReadMapper {
     public void run() {
       gapLeftCounts = new int[problemIntervals.length][4];
       for (ProblemRead read : workingLists[k]) {
-        short gapID = read.gapID;
+        int gapID = read.gapID;
         if (!problemIntervals[gapID].updateCount) {
           continue;
         }
@@ -621,7 +621,7 @@ class ProblemReadMapperPairedReadTermination extends ProblemReadMapper {
     public void run() {
       gapRightCounts = new int[problemIntervals.length][4];
       for (ProblemRead read : workingLists[k]) {
-        short gapID = read.gapID;
+        int gapID = read.gapID;
         if (!problemIntervals[gapID].updateCount) {
           continue;
         }
@@ -690,7 +690,7 @@ class ProblemReadMapperPairedReadTermination extends ProblemReadMapper {
         insertCounts[i] = new TObjectIntHashMap<>();
       }
       for (ProblemRead read : workingLists[k]) {
-        short gapID = read.gapID;
+        int gapID = read.gapID;
         boolean mapsToConcat = read.count >= read.cutoff;
         if (mapsToConcat) {
           if (read.mappingType == 2) {

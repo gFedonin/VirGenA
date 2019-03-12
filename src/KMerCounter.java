@@ -19,6 +19,7 @@ class KMerCounter extends KMerCounterBase{
 //      randomReadsCountsPath = element.getChildText("RandomModelPath");
 //      if(randomReadsCountsPath.isEmpty()){
         K = Integer.parseInt(element.getChildText("K"));
+        highCoef = Float.parseFloat(element.getChildText("IndelToleranceThreshold"));
         element = element.getChild("RandomModelParameters");
 //        String outPath = document.getRootElement().getChildText("OutPath");
         Logger logger = Logger.getInstance(document);

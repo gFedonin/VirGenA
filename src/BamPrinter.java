@@ -182,7 +182,7 @@ class BamPrinter extends Constants{
 
     @Override
     public int compare(SAMRecord o1, SAMRecord o2){
-      if(o1.getReferenceIndex() == o2.getReferenceIndex()){
+      if(o1.getReferenceIndex().equals(o2.getReferenceIndex())){
         return o1.getAlignmentStart() - o2.getAlignmentStart();
       }else{
         return o1.getReferenceIndex() - o2.getReferenceIndex();
